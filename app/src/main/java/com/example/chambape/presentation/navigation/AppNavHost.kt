@@ -15,7 +15,7 @@ fun AppNavHost() {
 
     NavHost(
         navController    = navController,
-        startDestination = Routes.Login.route
+        startDestination = Routes.Start.route
     ) {
 
         composable(Routes.Start.route) {
