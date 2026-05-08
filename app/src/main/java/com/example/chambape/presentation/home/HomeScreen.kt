@@ -311,7 +311,7 @@ private fun JobDetailsTopBar(
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                imageVector = Icons.Outlined.ArrowBack,
+                imageVector = Icons.Outlined.ArrowBackIosNew,
                 contentDescription = "Volver",
                 tint = TextPrimary
             )
