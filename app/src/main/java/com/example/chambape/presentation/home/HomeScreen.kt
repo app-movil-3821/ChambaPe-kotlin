@@ -176,7 +176,7 @@ fun JobDetailsScreen(
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
-                            text = "$25 / hora",
+                            text = "\$25 / hora",
                             fontSize = 27.sp,
                             fontWeight = FontWeight.Bold,
                             color = ChambaBlue
@@ -294,7 +294,8 @@ fun ApplyScreen(
 
 @Composable
 fun ActiveShiftScreen(
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onConfirmArrival: () -> Unit
 ) {
     Scaffold(
         containerColor = ScreenBackground,
@@ -310,7 +311,7 @@ fun ActiveShiftScreen(
                     .navigationBarsPadding()
             ) {
                 Button(
-                    onClick = { },
+                    onClick = onConfirmArrival,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
@@ -665,7 +666,8 @@ fun JobDetailsScreenPreview() {
 private fun ActiveShiftScreenPreview() {
     ChambaPeTheme {
         ActiveShiftScreen(
-            onClose = {}
+            onClose = { },
+            onConfirmArrival = { }
         )
     }
 }
