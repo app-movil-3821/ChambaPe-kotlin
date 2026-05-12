@@ -281,17 +281,6 @@ fun JobDetailsScreen(
         }
     }
 }
-
-@Composable
-fun ApplyScreen(
-    jobId: String,
-    onConfirmed: () -> Unit
-) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Apply Screen — $jobId")
-    }
-}
-
 @Composable
 fun ActiveShiftScreen(
     onClose: () -> Unit,

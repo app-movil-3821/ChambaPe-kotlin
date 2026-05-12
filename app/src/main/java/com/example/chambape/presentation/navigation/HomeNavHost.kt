@@ -45,7 +45,9 @@ fun HomeNavHost(navController: NavHostController) {
             ApplyScreen(
                 jobId       = back.arguments?.getString("jobId") ?: "",
                 onConfirmed = {
-                    navController.popBackStack(Routes.HomeFeed.route, inclusive = false)
+                    navController.navigate(Routes.HomeFeed.route) {
+                        popUpTo(Routes.HomeFeed.route) { inclusive = true }
+                    }
                 }
             )
         }

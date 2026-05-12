@@ -311,6 +311,7 @@ private fun ShiftCard(
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick   = onClick,   // ← agrega esto
         modifier  = modifier.fillMaxWidth(),
         shape     = RoundedCornerShape(16.dp),
         colors    = CardDefaults.cardColors(containerColor = Color.White),
@@ -473,57 +474,6 @@ private fun PromoBanner(modifier: Modifier = Modifier) {
                     text     = "👷",
                     fontSize = 40.sp
                 )
-            }
-        }
-    }
-}
-
-// ─── Shift Summary Screen (stub, kept for nav compatibility) ──────────────────
-@Composable
-fun ShiftSummaryScreen(
-    shiftId: String,
-    onDone: () -> Unit
-) {
-    val shift = sampleShifts.firstOrNull { it.id == shiftId } ?: return
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color    = BackgroundGray
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text       = shift.role,
-                fontSize   = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color      = Color(0xFF0D0D0D)
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text     = shift.company,
-                fontSize = 15.sp,
-                color    = Color(0xFF6B6B6B)
-            )
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text       = "\$%,.2f".format(shift.payment),
-                fontSize   = 36.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color      = ChambaBlue
-            )
-            Spacer(Modifier.height(32.dp))
-            Button(
-                onClick = onDone,
-                shape   = RoundedCornerShape(14.dp),
-                colors  = ButtonDefaults.buttonColors(containerColor = ChambaBlue),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }
