@@ -33,7 +33,7 @@ fun HomeNavHost(navController: NavHostController) {
                 jobId   = back.arguments?.getString("jobId") ?: "",
                 onBack  = { navController.popBackStack() },
                 onApply = { jobId ->
-                    navController.navigate(Routes.Apply.createRoute(jobId))
+                    navController.navigate(Routes.ActiveShift.createRoute(jobId))
                 }
             )
         }
@@ -45,17 +45,23 @@ fun HomeNavHost(navController: NavHostController) {
             ApplyScreen(
                 jobId       = back.arguments?.getString("jobId") ?: "",
                 onConfirmed = {
-                    navController.navigate(Routes.ActiveShift.route) {
-                        popUpTo(Routes.HomeFeed.route)
-                    }
+                    navController.popBackStack(Routes.HomeFeed.route, inclusive = false)
                 }
             )
         }
 
-        composable(Routes.ActiveShift.route) {
+        composable(
+            route = Routes.ActiveShift.route,
+            arguments = listOf(navArgument("jobId") { type = NavType.StringType })
+        ) { back ->
+            val jobId = back.arguments?.getString("jobId") ?: ""
+
             ActiveShiftScreen(
                 onClose = {
                     navController.popBackStack(Routes.HomeFeed.route, inclusive = false)
+                },
+                onConfirmArrival = {
+                    navController.navigate(Routes.Apply.createRoute(jobId))
                 }
             )
         }
