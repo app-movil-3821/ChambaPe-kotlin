@@ -33,7 +33,7 @@ fun HomeNavHost(navController: NavHostController) {
                 jobId   = back.arguments?.getString("jobId") ?: "",
                 onBack  = { navController.popBackStack() },
                 onApply = { jobId ->
-                    navController.navigate(Routes.ActiveShift.createRoute(jobId))
+                    navController.navigate(Routes.Apply.createRoute(jobId))
                 }
             )
         }
