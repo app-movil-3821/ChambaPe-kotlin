@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Notifications
@@ -71,7 +72,8 @@ private val sampleShifts = listOf(
 // ─── Main screen ──────────────────────────────────────────────────────────────
 @Composable
 fun MyShiftsScreen(
-    onShiftClick: (shiftId: String) -> Unit
+    onShiftClick: (shiftId: String) -> Unit,
+    onBack: (() -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -82,7 +84,7 @@ fun MyShiftsScreen(
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             // Top app bar
-            item { ShiftsTopBar() }
+            item { ShiftsTopBar(onBack = onBack) }
 
             // Page title
             item {
@@ -146,7 +148,7 @@ fun MyShiftsScreen(
 
 // ─── Top bar ──────────────────────────────────────────────────────────────────
 @Composable
-private fun ShiftsTopBar() {
+private fun ShiftsTopBar(onBack: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -155,13 +157,15 @@ private fun ShiftsTopBar() {
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        IconButton(onClick = { }) {
+        IconButton(onClick = { onBack?.invoke() }) {
             Icon(
-                imageVector        = Icons.Outlined.Menu,
-                contentDescription = "Menú",
-                tint               = Color(0xFF0D0D0D)
+                imageVector = if (onBack != null) Icons.Outlined.ArrowBack
+                else Icons.Outlined.Menu,
+                contentDescription = null,
+                tint = Color(0xFF0D0D0D)
             )
         }
+
         Text(
             text       = "ChambaYa",
             fontSize   = 20.sp,
@@ -176,7 +180,6 @@ private fun ShiftsTopBar() {
                     tint               = ChambaBlue
                 )
             }
-            // Notification badge
             Box(
                 modifier = Modifier
                     .size(8.dp)

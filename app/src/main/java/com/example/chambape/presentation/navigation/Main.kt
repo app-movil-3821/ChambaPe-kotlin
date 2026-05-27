@@ -18,9 +18,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.chambape.presentation.auth.SkillsScreen
 import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
 import com.example.chambape.presentation.profile.ProfileScreen
+import com.example.chambape.presentation.profile.SettingsScreen
 import com.example.chambape.presentation.shifts.MyShiftsScreen
 import com.example.chambape.presentation.shifts.ShiftSummaryScreen
 
@@ -36,10 +38,13 @@ fun MainScreen() {
             startDestination = Routes.HomeFeed.route,
             modifier         = Modifier.padding(innerPadding)
         ) {
-            // Tab: Home — usa su propio NavHost interno
+            // Tab: Home — pasa mainNavController
             composable(Routes.HomeFeed.route) {
                 val homeNav = rememberNavController()
-                HomeNavHost(navController = homeNav)
+                HomeNavHost(
+                    navController     = homeNav,
+                    mainNavController = navController  // ← pasa el main
+                )
             }
 
             // Tab: Shifts
@@ -80,7 +85,38 @@ fun MainScreen() {
 
             // Tab: Profile
             composable(Routes.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    onGoToMyShifts = { navController.navigate(Routes.MyShiftsFromProfile.route) },
+                    onGoToSettings = { navController.navigate(Routes.Settings.route) },
+                    onGoToSkills   = { navController.navigate(Routes.SkillsFromProfile.route) },
+                    onLogout       = {
+                        navController.navigate(Routes.Start.route) {
+                            popUpTo(Routes.Main.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // Settings
+            composable(Routes.Settings.route) {
+                SettingsScreen(onBack = { navController.popBackStack() })
+            }
+
+            // MyShifts desde Profile (con back)
+            composable(Routes.MyShiftsFromProfile.route) {
+                MyShiftsScreen(
+                    onShiftClick = { shiftId ->
+                        navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Skills desde Profile (con back)
+            composable(Routes.SkillsFromProfile.route) {
+                SkillsScreen(
+                    onContinue = { navController.popBackStack() }
+                )
             }
         }
     }

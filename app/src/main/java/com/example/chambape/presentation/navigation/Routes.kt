@@ -1,11 +1,14 @@
 package com.example.chambape.presentation.navigation
 
 sealed class Routes(val route: String) {
+
     // Auth
-    object Start    : Routes("start")
-    object Login    : Routes("login")
-    object Register : Routes("register")
-    object Skills   : Routes("skills")
+    object Start             : Routes("start")
+    object Login             : Routes("login")
+    object Register          : Routes("register")
+    object PhoneVerification : Routes("phone_verification")
+    object ProfileSetup      : Routes("profile_setup")
+    object Skills            : Routes("skills")
 
     // Main container
     object Main : Routes("main")
@@ -21,10 +24,12 @@ sealed class Routes(val route: String) {
     object ActiveShift : Routes("active_shift/{jobId}") {
         fun createRoute(jobId: String) = "active_shift/$jobId"
     }
+    object Help : Routes("help")
 
     // Shifts tab
-    object MyShifts     : Routes("my_shifts")
-    object ShiftSummary : Routes("shift_summary/{shiftId}") {
+    object MyShifts            : Routes("my_shifts")
+    object MyShiftsFromProfile : Routes("my_shifts_from_profile")  // ← desde Profile
+    object ShiftSummary        : Routes("shift_summary/{shiftId}") {
         fun createRoute(shiftId: String) = "shift_summary/$shiftId"
     }
 
@@ -35,5 +40,7 @@ sealed class Routes(val route: String) {
     }
 
     // Profile tab
-    object Profile : Routes("profile")
+    object Profile           : Routes("profile")
+    object Settings          : Routes("settings")
+    object SkillsFromProfile : Routes("skills_from_profile")  // ← desde Profile
 }

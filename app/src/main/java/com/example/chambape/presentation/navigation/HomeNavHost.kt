@@ -8,11 +8,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.chambape.presentation.home.ActiveShiftScreen
 import com.example.chambape.presentation.home.ApplyScreen
+import com.example.chambape.presentation.home.HelpScreen
 import com.example.chambape.presentation.home.HomeFeedScreen
 import com.example.chambape.presentation.home.JobDetailsScreen
 
 @Composable
-fun HomeNavHost(navController: NavHostController) {
+fun HomeNavHost(
+    navController: NavHostController,
+    mainNavController: NavHostController  // ← recibe el main
+) {
     NavHost(
         navController    = navController,
         startDestination = Routes.HomeFeed.route
@@ -45,26 +49,37 @@ fun HomeNavHost(navController: NavHostController) {
             ApplyScreen(
                 jobId       = back.arguments?.getString("jobId") ?: "",
                 onConfirmed = {
-                    navController.navigate(Routes.HomeFeed.route) {
-                        popUpTo(Routes.HomeFeed.route) { inclusive = true }
+                    navController.navigate(
+                        Routes.ActiveShift.createRoute(
+                            back.arguments?.getString("jobId") ?: ""
+                        )
+                    ) {
+                        popUpTo(Routes.HomeFeed.route)
                     }
                 }
             )
         }
 
         composable(
-            route = Routes.ActiveShift.route,
+            route     = Routes.ActiveShift.route,
             arguments = listOf(navArgument("jobId") { type = NavType.StringType })
-        ) { back ->
-            val jobId = back.arguments?.getString("jobId") ?: ""
-
+        ) {
             ActiveShiftScreen(
-                onClose = {
+                onClose          = {
                     navController.popBackStack(Routes.HomeFeed.route, inclusive = false)
                 },
                 onConfirmArrival = {
-                    navController.navigate(Routes.Apply.createRoute(jobId))
-                }
+                    mainNavController.navigate(Routes.ShiftSummary.createRoute("1")) {
+                        popUpTo(Routes.HomeFeed.route)
+                    }
+                },
+                onHelp = { navController.navigate(Routes.Help.route) }
+            )
+        }
+
+        composable(Routes.Help.route) {
+            HelpScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

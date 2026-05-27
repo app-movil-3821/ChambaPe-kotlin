@@ -13,23 +13,23 @@ enum class MainTab(
     val icon: ImageVector
 ) {
     HOME(
-        route     = Routes.HomeFeed.route,
-        label     = "Home",
-        icon      = Icons.Outlined.Home
+        route = Routes.HomeFeed.route,
+        label = "Home",
+        icon  = Icons.Outlined.Home
     ),
     SHIFTS(
-        route     = Routes.MyShifts.route,
-        label     = "Shifts",
-        icon      = Icons.Outlined.WorkOutline
+        route = Routes.MyShifts.route,
+        label = "Shifts",
+        icon  = Icons.Outlined.WorkOutline
     ),
     MESSAGES(
-        route     = Routes.Messages.route,
-        label     = "Messages",
-        icon      = Icons.Outlined.ChatBubbleOutline
+        route = Routes.Messages.route,
+        label = "Messages",
+        icon  = Icons.Outlined.ChatBubbleOutline
     ),
     PROFILE(
-        route     = Routes.Profile.route,
-        label     = "Profile",
-        icon      = Icons.Outlined.Person
+        route = Routes.Profile.route,
+        label = "Profile",
+        icon  = Icons.Outlined.Person
     )
 }

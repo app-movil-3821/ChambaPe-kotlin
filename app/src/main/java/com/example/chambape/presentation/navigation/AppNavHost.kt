@@ -5,6 +5,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.chambape.presentation.auth.LoginScreen
+import com.example.chambape.presentation.auth.PhoneVerificationScreen
+import com.example.chambape.presentation.auth.ProfileSetupScreen
 import com.example.chambape.presentation.auth.RegisterScreen
 import com.example.chambape.presentation.auth.SkillsScreen
 import com.example.chambape.presentation.auth.StartScreen
@@ -17,7 +19,6 @@ fun AppNavHost() {
         navController    = navController,
         startDestination = Routes.Start.route
     ) {
-
         composable(Routes.Start.route) {
             StartScreen(
                 onGetStarted = { navController.navigate(Routes.Register.route) },
@@ -38,8 +39,20 @@ fun AppNavHost() {
 
         composable(Routes.Register.route) {
             RegisterScreen(
-                onRegisterSuccess = { navController.navigate(Routes.Skills.route) },
+                onRegisterSuccess = { navController.navigate(Routes.PhoneVerification.route) },
                 onGoToLogin       = { navController.navigate(Routes.Login.route) }
+            )
+        }
+
+        composable(Routes.PhoneVerification.route) {
+            PhoneVerificationScreen(
+                onVerified = { navController.navigate(Routes.ProfileSetup.route) }
+            )
+        }
+
+        composable(Routes.ProfileSetup.route) {
+            ProfileSetupScreen(
+                onNext = { navController.navigate(Routes.Skills.route) }
             )
         }
 
