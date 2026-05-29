@@ -37,6 +37,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,18 +73,6 @@ data class ChatMessage(
     val time: String,
     val isFromMe: Boolean,
     val isRead: Boolean = true
-)
-
-private val sampleChats = listOf(
-    ChatPreview("cafe_central",    "Café Central",       "¡Hola! ¿A qué hora llegas?", "10:42 AM", unread = 1, emoji = "🏪"),
-    ChatPreview("almacenes_global","Almacenes Global",   "Turno confirmado para mañana","Ayer",     unread = 0, emoji = "📦"),
-    ChatPreview("catering_luxury", "Catering Luxury",    "¿Puedes quedarte una hora más?","Lun",    unread = 2, emoji = "🍽️"),
-    ChatPreview("fastexpress",     "FastExpress S.L.",   "Gracias por tu trabajo hoy",  "Dom",     unread = 0, emoji = "🚚"),
-)
-
-private val sampleMessages = mutableListOf(
-    ChatMessage("1", "¡Hola! ¿A qué hora llegas?", "10:42 AM", isFromMe = false),
-    ChatMessage("2", "Llego en 10 minutos.",         "10:45 AM", isFromMe = true,  isRead = true),
 )
 
 // ─── Messages list screen ─────────────────────────────────────────────────────
@@ -123,7 +112,7 @@ fun MessagesScreen(
                 modifier       = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                items(sampleChats) { chat ->
+                items(ChatStore.chats) { chat ->
                     ChatPreviewRow(chat = chat, onClick = { onChatClick(chat.id) })
                     Divider(
                         color    = Color(0xFFF0F0F0),
@@ -216,10 +205,22 @@ fun ChatScreen(
     chatId: String,
     onBack: () -> Unit
 ) {
-    val chatName = sampleChats.firstOrNull { it.id == chatId }?.name ?: chatId
-    val messages  = remember { mutableStateListOf(*sampleMessages.toTypedArray()) }
+    val chatName  = ChatStore.nameOf(chatId)
+    val messages  = ChatStore.messagesFor(chatId)
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+
+    // Al abrir el chat, se marca como leído (desaparece el badge).
+    LaunchedEffect(chatId) {
+        ChatStore.markAsRead(chatId)
+    }
+
+    // Cada vez que llega/envía un mensaje, baja al final de la lista.
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size)
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -345,15 +346,7 @@ fun ChatScreen(
                         .background(ChambaBlue)
                         .clickable {
                             if (inputText.isNotBlank()) {
-                                messages.add(
-                                    ChatMessage(
-                                        id       = (messages.size + 1).toString(),
-                                        text     = inputText.trim(),
-                                        time     = "Ahora",
-                                        isFromMe = true,
-                                        isRead   = false
-                                    )
-                                )
+                                ChatStore.send(chatId, inputText)
                                 inputText = ""
                             }
                         },
