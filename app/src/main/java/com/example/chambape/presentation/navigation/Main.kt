@@ -21,11 +21,15 @@ import androidx.navigation.navArgument
 import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
 import com.example.chambape.presentation.profile.ProfileScreen
+import com.example.chambape.presentation.profile.SettingsScreen
+import com.example.chambape.presentation.profile.WalletScreen
 import com.example.chambape.presentation.shifts.MyShiftsScreen
 import com.example.chambape.presentation.shifts.ShiftSummaryScreen
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onLogout: () -> Unit = {}
+) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -80,7 +84,36 @@ fun MainScreen() {
 
             // Tab: Profile
             composable(Routes.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    onMyShifts = {
+                        // Salta a la pestaña de turnos
+                        navController.navigate(Routes.MyShifts.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState    = true
+                        }
+                    },
+                    onWallet   = { navController.navigate(Routes.Wallet.route) },
+                    onSettings = { navController.navigate(Routes.Settings.route) },
+                    onLogout   = onLogout
+                )
+            }
+
+            // Configuración (desde Profile)
+            composable(Routes.Settings.route) {
+                SettingsScreen(
+                    onBack   = { navController.popBackStack() },
+                    onLogout = onLogout
+                )
+            }
+
+            // Billetera (desde Profile)
+            composable(Routes.Wallet.route) {
+                WalletScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }
