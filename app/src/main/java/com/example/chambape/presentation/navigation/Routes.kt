@@ -5,6 +5,10 @@ sealed class Routes(val route: String) {
     object Start    : Routes("start")
     object Login    : Routes("login")
     object Register : Routes("register")
+
+    object PhoneVerification   : Routes("phone_verification")
+
+    object ProfileSetup        : Routes("profile_setup")
     object Skills   : Routes("skills")
 
     // Main container
