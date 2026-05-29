@@ -57,6 +57,9 @@ fun ShiftSummaryScreen(
     shiftId: String,
     onDone: () -> Unit
 ) {
+    // Busca el turno seleccionado; si no existe usa el primero como respaldo.
+    val shift = sampleShifts.firstOrNull { it.id == shiftId } ?: sampleShifts.first()
+
     var rating     by remember { mutableIntStateOf(4) }
     var comment    by remember { mutableStateOf("") }
 
@@ -144,7 +147,7 @@ fun ShiftSummaryScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text       = "Ganaste \$125 hoy",
+                        text       = "Ganaste \$%,.2f por este turno".format(shift.payment),
                         fontSize   = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color      = Color.White
@@ -169,7 +172,7 @@ fun ShiftSummaryScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text       = "Café Central",
+                        text       = shift.company,
                         fontSize   = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color      = TextPrimary

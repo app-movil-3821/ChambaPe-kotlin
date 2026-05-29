@@ -62,7 +62,7 @@ data class CompletedShift(
     val status: String = "Completado"
 )
 
-private val sampleShifts = listOf(
+internal val sampleShifts = listOf(
     CompletedShift("1", "Asistente de Logística", "Almacenes Global S.A.", "15 Oct, 2023", 8,  1200.00),
     CompletedShift("2", "Mesero de Eventos",      "Catering Luxury",       "12 Oct, 2023", 6,   950.00),
     CompletedShift("3", "Repartidor de Paquetería","FastExpress S.L.",     "10 Oct, 2023", 5,   780.00),
