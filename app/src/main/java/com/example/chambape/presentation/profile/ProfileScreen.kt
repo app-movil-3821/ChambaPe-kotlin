@@ -33,9 +33,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,14 +61,23 @@ private val SkillUnselected = Color(0xFFEEEFF5)
 // ─── Data ─────────────────────────────────────────────────────────────────────
 data class Skill(val label: String, val emoji: String, val selected: Boolean)
 
-private val userSkills = listOf(
-    Skill("Mesero",  "🍽️", selected = true),
-    Skill("Cajero",  "💰", selected = false),
-)
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onMyShifts: () -> Unit = {},
+    onWallet:   () -> Unit = {},
+    onSettings: () -> Unit = {},
+    onLogout:   () -> Unit = {}
+) {
+    // Habilidades como estado: tocar una alterna su selección.
+    val skills = remember {
+        mutableStateListOf(
+            Skill("Mesero", "🍽️", selected = true),
+            Skill("Cajero", "💰", selected = false),
+        )
+    }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color    = BackgroundGray
@@ -155,8 +171,14 @@ fun ProfileScreen() {
                 )
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    userSkills.forEach { skill ->
-                        SkillChip(skill = skill, modifier = Modifier.weight(1f))
+                    skills.forEachIndexed { index, skill ->
+                        SkillChip(
+                            skill    = skill,
+                            modifier = Modifier.weight(1f),
+                            onClick  = {
+                                skills[index] = skill.copy(selected = !skill.selected)
+                            }
+                        )
                     }
                 }
             }
@@ -184,7 +206,7 @@ fun ProfileScreen() {
                             iconBg  = Color(0xFFE8EEFF),
                             iconTint = ChambaBlue,
                             label   = "Mis Turnos",
-                            onClick = {}
+                            onClick = onMyShifts
                         )
                         Divider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(horizontal = 16.dp))
                         ManagementRow(
@@ -192,7 +214,7 @@ fun ProfileScreen() {
                             iconBg  = Color(0xFFE8EEFF),
                             iconTint = ChambaBlue,
                             label   = "Billetera",
-                            onClick = {}
+                            onClick = onWallet
                         )
                         Divider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(horizontal = 16.dp))
                         ManagementRow(
@@ -200,7 +222,7 @@ fun ProfileScreen() {
                             iconBg  = Color(0xFFE8EEFF),
                             iconTint = ChambaBlue,
                             label   = "Configuración",
-                            onClick = {}
+                            onClick = onSettings
                         )
                     }
                 }
@@ -220,13 +242,37 @@ fun ProfileScreen() {
                         label    = "Cerrar sesión",
                         labelColor = Color(0xFFE53935),
                         showChevron = false,
-                        onClick  = {}
+                        onClick  = { showLogoutDialog = true }
                     )
                 }
             }
 
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    // Diálogo de confirmación de cierre de sesión
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title   = { Text("Cerrar sesión") },
+            text    = { Text("¿Seguro que quieres cerrar tu sesión?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    }
+                ) {
+                    Text("Cerrar sesión", color = Color(0xFFE53935), fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
@@ -266,11 +312,16 @@ private fun ProfileTopBar() {
 }
 
 @Composable
-private fun SkillChip(skill: Skill, modifier: Modifier = Modifier) {
+private fun SkillChip(
+    skill: Skill,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
             .background(if (skill.selected) SkillSelected else SkillUnselected)
+            .clickable { onClick() }
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
