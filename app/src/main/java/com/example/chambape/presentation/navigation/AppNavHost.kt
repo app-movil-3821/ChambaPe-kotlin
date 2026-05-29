@@ -5,6 +5,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.chambape.presentation.auth.LoginScreen
+import com.example.chambape.presentation.auth.PhoneVerificationScreen
+import com.example.chambape.presentation.auth.ProfileSetupScreen
 import com.example.chambape.presentation.auth.RegisterScreen
 import com.example.chambape.presentation.auth.SkillsScreen
 import com.example.chambape.presentation.auth.StartScreen
@@ -27,7 +29,7 @@ fun AppNavHost() {
 
         composable(Routes.Login.route) {
             LoginScreen(
-                onLoginSuccess  = {
+                onLoginSuccess = {
                     navController.navigate(Routes.Main.route) {
                         popUpTo(Routes.Start.route) { inclusive = true }
                     }
@@ -38,8 +40,22 @@ fun AppNavHost() {
 
         composable(Routes.Register.route) {
             RegisterScreen(
-                onRegisterSuccess = { navController.navigate(Routes.Skills.route) },
+                onRegisterSuccess = { navController.navigate(Routes.PhoneVerification.route) },
                 onGoToLogin       = { navController.navigate(Routes.Login.route) }
+            )
+        }
+
+        composable(Routes.PhoneVerification.route) {
+            PhoneVerificationScreen(
+                onVerified = { navController.navigate(Routes.ProfileSetup.route) },
+                onBack     = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ProfileSetup.route) {
+            ProfileSetupScreen(
+                onContinue = { navController.navigate(Routes.Skills.route) },
+                onBack     = { navController.popBackStack() }
             )
         }
 
@@ -49,7 +65,8 @@ fun AppNavHost() {
                     navController.navigate(Routes.Main.route) {
                         popUpTo(Routes.Start.route) { inclusive = true }
                     }
-                }
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 
