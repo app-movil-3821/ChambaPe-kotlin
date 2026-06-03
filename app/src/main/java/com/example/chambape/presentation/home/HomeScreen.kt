@@ -284,7 +284,8 @@ fun JobDetailsScreen(
 @Composable
 fun ActiveShiftScreen(
     onClose: () -> Unit,
-    onConfirmArrival: () -> Unit
+    onConfirmArrival: () -> Unit,
+    onHelp: () -> Unit
 ) {
     Scaffold(
         containerColor = ScreenBackground,
@@ -328,7 +329,7 @@ fun ActiveShiftScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedButton(
-                    onClick = { },
+                    onClick = onHelp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -656,7 +657,8 @@ private fun ActiveShiftScreenPreview() {
     ChambaPeTheme {
         ActiveShiftScreen(
             onClose = { },
-            onConfirmArrival = { }
+            onConfirmArrival = { },
+            onHelp = { }
         )
     }
 }

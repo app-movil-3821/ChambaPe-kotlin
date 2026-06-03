@@ -21,6 +21,9 @@ sealed class Routes(val route: String) {
     object ActiveShift : Routes("active_shift/{jobId}") {
         fun createRoute(jobId: String) = "active_shift/$jobId"
     }
+    object Help : Routes("help/{jobId}") {
+        fun createRoute(jobId: String) = "help/$jobId"
+    }
 
     // Shifts tab
     object MyShifts     : Routes("my_shifts")

@@ -10,6 +10,7 @@ import com.example.chambape.presentation.home.ActiveShiftScreen
 import com.example.chambape.presentation.home.ApplyScreen
 import com.example.chambape.presentation.home.HomeFeedScreen
 import com.example.chambape.presentation.home.JobDetailsScreen
+import com.example.chambape.presentation.shifts.HelpScreen
 
 @Composable
 fun HomeNavHost(navController: NavHostController) {
@@ -64,8 +65,26 @@ fun HomeNavHost(navController: NavHostController) {
                 },
                 onConfirmArrival = {
                     navController.navigate(Routes.Apply.createRoute(jobId))
+                },
+                onHelp = {
+                    navController.navigate(Routes.Help.createRoute(jobId))
                 }
             )
+        }
+
+        composable(
+            route = Routes.Help.route,
+            arguments = listOf(navArgument("jobId") { type = NavType.StringType })
+        ) {
+            HelpScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onSendMessage = {
+                    navController.popBackStack()
+                }
+            )
+
         }
     }
 }
