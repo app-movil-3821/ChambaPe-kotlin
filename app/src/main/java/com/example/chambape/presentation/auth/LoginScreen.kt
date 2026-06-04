@@ -44,7 +44,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Color principal de la app
+// Color principal de la appp
 private val ChambaPeBlue = Color(0xFF1A3FD8)
 
 @Composable
