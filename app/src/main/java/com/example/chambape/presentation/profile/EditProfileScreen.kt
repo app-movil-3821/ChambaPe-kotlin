@@ -51,7 +51,7 @@ private val TextPrimary   = Color(0xFF0D0D0D)
 private val TextSecondary = Color(0xFF6B6B6B)
 
 @Composable
-fun SettingsScreen(
+fun EditProfileScreen(
     onBack: () -> Unit
 ) {
     var name  by remember { mutableStateOf("Diego") }
@@ -81,7 +81,7 @@ fun SettingsScreen(
                     )
                 }
                 Text(
-                    text       = "Configuración",
+                    text       = "Editar perfil",
                     fontSize   = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color      = TextPrimary
@@ -139,7 +139,7 @@ fun SettingsScreen(
                 Spacer(Modifier.height(24.dp))
 
                 // Campos
-                SettingsField(
+                EditProfileField(
                     label         = "Nombre completo",
                     value         = name,
                     onValueChange = { name = it },
@@ -155,7 +155,7 @@ fun SettingsScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                SettingsField(
+                EditProfileField(
                     label         = "Correo electrónico",
                     value         = email,
                     onValueChange = { email = it },
@@ -171,7 +171,7 @@ fun SettingsScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                SettingsField(
+                EditProfileField(
                     label         = "Teléfono",
                     value         = phone,
                     onValueChange = { phone = it },
@@ -217,7 +217,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsField(
+private fun EditProfileField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
@@ -250,6 +250,6 @@ private fun SettingsField(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun SettingsScreenPreview() {
-    SettingsScreen(onBack = { })
+fun EditProfileScreenPreview() {
+    EditProfileScreen(onBack = { })
 }
