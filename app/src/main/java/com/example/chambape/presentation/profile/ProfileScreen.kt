@@ -58,6 +58,7 @@ private val TextSecondary  = Color(0xFF6B6B6B)
 fun ProfileScreen(
     onGoToMyShifts: () -> Unit = {},
     onGoToSettings: () -> Unit = {},
+    onGoToWallet:   () -> Unit = {},
     onGoToSkills:   () -> Unit = {},
     onLogout:       () -> Unit = {}
 ) {
@@ -162,7 +163,7 @@ fun ProfileScreen(
                     Column {
                         ProfileMenuItem(icon = Icons.Outlined.Work,       label = "Mis Turnos",    onClick = { onGoToMyShifts() })
                         MenuDivider()
-                        ProfileMenuItem(icon = Icons.Outlined.CreditCard,  label = "Billetera",     onClick = { onGoToMyShifts() })
+                        ProfileMenuItem(icon = Icons.Outlined.CreditCard,  label = "Billetera",     onClick = { onGoToWallet() })
                         MenuDivider()
                         ProfileMenuItem(icon = Icons.Outlined.Settings,    label = "Configuración", onClick = { onGoToSettings() })
                     }

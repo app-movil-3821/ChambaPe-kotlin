@@ -23,6 +23,7 @@ import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
 import com.example.chambape.presentation.profile.ProfileScreen
 import com.example.chambape.presentation.profile.SettingsScreen
+import com.example.chambape.presentation.profile.WalletScreen
 import com.example.chambape.presentation.shifts.MyShiftsScreen
 import com.example.chambape.presentation.shifts.ShiftSummaryScreen
 
@@ -88,6 +89,7 @@ fun MainScreen() {
                 ProfileScreen(
                     onGoToMyShifts = { navController.navigate(Routes.MyShiftsFromProfile.route) },
                     onGoToSettings = { navController.navigate(Routes.Settings.route) },
+                    onGoToWallet   = { navController.navigate(Routes.Wallet.route) },
                     onGoToSkills   = { navController.navigate(Routes.SkillsFromProfile.route) },
                     onLogout       = {
                         navController.navigate(Routes.Start.route) {
@@ -99,7 +101,19 @@ fun MainScreen() {
 
             // Settings
             composable(Routes.Settings.route) {
-                SettingsScreen(onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    onBack   = { navController.popBackStack() },
+                    onLogout = {
+                        navController.navigate(Routes.Start.route) {
+                            popUpTo(Routes.Main.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // Wallet
+            composable(Routes.Wallet.route) {
+                WalletScreen(onBack = { navController.popBackStack() })
             }
 
             // MyShifts desde Profile (con back)
