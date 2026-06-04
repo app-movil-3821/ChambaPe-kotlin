@@ -8,9 +8,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.chambape.presentation.home.ActiveShiftScreen
 import com.example.chambape.presentation.home.ApplyScreen
-import com.example.chambape.presentation.home.HelpScreen
 import com.example.chambape.presentation.home.HomeFeedScreen
 import com.example.chambape.presentation.home.JobDetailsScreen
+import com.example.chambape.presentation.shifts.HelpScreen
 
 @Composable
 fun HomeNavHost(
@@ -79,7 +79,8 @@ fun HomeNavHost(
 
         composable(Routes.Help.route) {
             HelpScreen(
-                onBack = { navController.popBackStack() }
+                onBack        = { navController.popBackStack() },
+                onSendMessage = { navController.popBackStack() }
             )
         }
     }
