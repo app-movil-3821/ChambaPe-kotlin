@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.example.chambape.presentation.auth.SkillsScreen
 import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
+import com.example.chambape.presentation.profile.EditProfileScreen
 import com.example.chambape.presentation.profile.ProfileScreen
 import com.example.chambape.presentation.profile.SettingsScreen
 import com.example.chambape.presentation.profile.WalletScreen
@@ -87,16 +88,22 @@ fun MainScreen() {
             // Tab: Profile
             composable(Routes.Profile.route) {
                 ProfileScreen(
-                    onGoToMyShifts = { navController.navigate(Routes.MyShiftsFromProfile.route) },
-                    onGoToSettings = { navController.navigate(Routes.Settings.route) },
-                    onGoToWallet   = { navController.navigate(Routes.Wallet.route) },
-                    onGoToSkills   = { navController.navigate(Routes.SkillsFromProfile.route) },
-                    onLogout       = {
+                    onGoToEditProfile = { navController.navigate(Routes.EditProfile.route) },
+                    onGoToMyShifts    = { navController.navigate(Routes.MyShiftsFromProfile.route) },
+                    onGoToSettings    = { navController.navigate(Routes.Settings.route) },
+                    onGoToWallet      = { navController.navigate(Routes.Wallet.route) },
+                    onGoToSkills      = { navController.navigate(Routes.SkillsFromProfile.route) },
+                    onLogout          = {
                         navController.navigate(Routes.Start.route) {
                             popUpTo(Routes.Main.route) { inclusive = true }
                         }
                     }
                 )
+            }
+
+            // Edit Profile
+            composable(Routes.EditProfile.route) {
+                EditProfileScreen(onBack = { navController.popBackStack() })
             }
 
             // Settings

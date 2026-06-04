@@ -41,6 +41,7 @@ sealed class Routes(val route: String) {
 
     // Profile tab
     object Profile           : Routes("profile")
+    object EditProfile       : Routes("edit_profile")
     object Settings          : Routes("settings")
     object Wallet            : Routes("wallet")
     object SkillsFromProfile : Routes("skills_from_profile")  // ← desde Profile

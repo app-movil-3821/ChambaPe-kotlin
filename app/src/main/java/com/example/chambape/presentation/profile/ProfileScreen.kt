@@ -56,11 +56,12 @@ private val TextSecondary  = Color(0xFF6B6B6B)
 
 @Composable
 fun ProfileScreen(
-    onGoToMyShifts: () -> Unit = {},
-    onGoToSettings: () -> Unit = {},
-    onGoToWallet:   () -> Unit = {},
-    onGoToSkills:   () -> Unit = {},
-    onLogout:       () -> Unit = {}
+    onGoToEditProfile: () -> Unit = {},
+    onGoToMyShifts:    () -> Unit = {},
+    onGoToSettings:    () -> Unit = {},
+    onGoToWallet:      () -> Unit = {},
+    onGoToSkills:      () -> Unit = {},
+    onLogout:          () -> Unit = {}
 ) {
     val selectedSkills = remember { mutableStateOf(listOf("Mesero", "Cajero")) }
 
@@ -93,8 +94,8 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Avatar
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            // Avatar — tap para editar perfil
+            Column(modifier = Modifier.fillMaxWidth().clickable { onGoToEditProfile() }, horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(contentAlignment = Alignment.BottomEnd) {
                     Box(
                         modifier = Modifier.size(90.dp).clip(CircleShape).background(Color(0xFFE8EDFB)).border(2.dp, ChambaBlue, CircleShape),
