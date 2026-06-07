@@ -52,8 +52,7 @@ dependencies {
     // OkHttp + Retrofit
     implementation(libs.okhttp.logging)
     implementation(libs.retrofit)
-    implementation(libs.retrofit.kotlinx.serialization) // ← serialization converter
-    // implementation(libs.retrofit.converter.gson)     // ← quita esta
+    implementation(libs.retrofit.converter.gson)     // ← quita esta
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)

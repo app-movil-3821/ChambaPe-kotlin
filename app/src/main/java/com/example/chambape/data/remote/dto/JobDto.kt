@@ -1,8 +1,6 @@
 package com.example.chambape.data.remote.dto
 
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class JobDto(
     val id: String,
     val contractorId: String,
@@ -19,7 +17,6 @@ data class JobDto(
     val updatedAt: String = ""
 )
 
-@Serializable
 data class LocationDto(
     val latitude: Double,
     val longitude: Double,

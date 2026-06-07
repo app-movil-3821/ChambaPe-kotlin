@@ -1,8 +1,7 @@
 package com.example.chambape.data.remote.dto
 
-import kotlinx.serialization.Serializable
 
-@Serializable
+
 data class ConversationDto(
     val id: String,
     val jobId: String,
@@ -14,7 +13,7 @@ data class ConversationDto(
     val updatedAt: String
 )
 
-@Serializable
+
 data class MessageDto(
     val id: String,
     val conversationId: String,
@@ -25,7 +24,7 @@ data class MessageDto(
     val readAt: String? = null
 )
 
-@Serializable
+
 data class SendMessageRequest(
     val senderId: String,
     val content: String

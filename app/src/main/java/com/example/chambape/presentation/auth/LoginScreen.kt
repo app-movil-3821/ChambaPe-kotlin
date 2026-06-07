@@ -2,6 +2,7 @@ package com.example.chambape.presentation.auth
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +34,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,11 +53,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.chambape.di.AppModule
 
 private val ChambaPeBlue = Color(0xFF1A3FD8)
 private val ErrorRed     = Color(0xFFD93025)
-
-// ─── Validaciones ─────────────────────────────────────────────────────────────
 
 fun validateEmail(email: String): String? {
     if (email.isBlank()) return "El email es requerido"
@@ -64,17 +68,20 @@ fun validateEmail(email: String): String? {
 
 fun validatePasswordLogin(password: String): String? {
     if (password.isBlank()) return "La contraseña es requerida"
-    if (password.length < 8) return "Mínimo 8 caracteres"
+    if (password.length < 6) return "Mínimo 6 caracteres" // ← cambia 8 por 6
     return null
 }
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onGoToRegister: () -> Unit
 ) {
+    val viewModel: LoginViewModel = viewModel(
+        factory = LoginViewModelFactory(AppModule.authRepository)
+    )
+    val uiState by viewModel.uiState.collectAsState()
+
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -82,8 +89,17 @@ fun LoginScreen(
     var passwordError   by remember { mutableStateOf<String?>(null) }
     var submitted       by remember { mutableStateOf(false) }
 
-    val focusManager  = LocalFocusManager.current
-    val isFormValid   = validateEmail(email) == null && validatePasswordLogin(password) == null
+    val focusManager = LocalFocusManager.current
+    val isFormValid  = validateEmail(email) == null && validatePasswordLogin(password) == null
+    val isLoading    = uiState is LoginUiState.Loading
+
+    // Navegar cuando login es exitoso
+    LaunchedEffect(uiState) {
+        if (uiState is LoginUiState.Success) {
+            onLoginSuccess()
+            viewModel.resetState()
+        }
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
         Column(
@@ -104,6 +120,18 @@ fun LoginScreen(
             Text(text = "Inicia sesión para encontrar tu próximo chambe.", fontSize = 15.sp, color = Color(0xFF6B6B6B))
 
             Spacer(Modifier.height(32.dp))
+
+            // Error del servidor
+            if (uiState is LoginUiState.Error) {
+                Text(
+                    text     = (uiState as LoginUiState.Error).message,
+                    color    = ErrorRed,
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                )
+            }
 
             // ── Email ──────────────────────────────────────────────────────────
             Text(text = "Email o Teléfono", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D))
@@ -185,16 +213,27 @@ fun LoginScreen(
                     submitted     = true
                     emailError    = validateEmail(email)
                     passwordError = validatePasswordLogin(password)
-                    if (isFormValid) onLoginSuccess()
+                    if (isFormValid && !isLoading) {
+                        viewModel.login(email, password)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape    = RoundedCornerShape(12.dp),
+                enabled  = !isLoading,
                 colors   = ButtonDefaults.buttonColors(
                     containerColor         = ChambaPeBlue,
                     disabledContainerColor = Color(0xFFBBCCF5)
                 )
             ) {
-                Text(text = "Iniciar sesión", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color    = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(text = "Iniciar sesión", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
             }
 
             Spacer(Modifier.height(28.dp))

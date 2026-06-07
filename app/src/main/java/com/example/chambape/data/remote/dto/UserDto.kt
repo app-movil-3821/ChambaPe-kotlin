@@ -1,8 +1,6 @@
 package com.example.chambape.data.remote.dto
 
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class UserDto(
     val id: String,
     val name: String,
@@ -13,7 +11,6 @@ data class UserDto(
     val updatedAt: String = ""
 )
 
-@Serializable
 data class ProfileDto(
     val photoUrl: String? = null,
     val skills: List<String> = emptyList(),

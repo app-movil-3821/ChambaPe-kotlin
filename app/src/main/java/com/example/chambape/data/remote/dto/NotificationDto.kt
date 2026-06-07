@@ -1,8 +1,6 @@
 package com.example.chambape.data.remote.dto
 
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class NotificationDto(
     val id: String,
     val userId: String,
