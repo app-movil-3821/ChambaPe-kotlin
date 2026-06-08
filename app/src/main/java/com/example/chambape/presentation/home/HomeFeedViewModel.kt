@@ -12,8 +12,11 @@ class HomeFeedViewModel : ViewModel() {
 
     private val jobRepository = AppModule.jobRepository
 
-    private val _jobs = MutableStateFlow<List<Job>>(emptyList())
+    private val _jobs      = MutableStateFlow<List<Job>>(emptyList())
     val jobs: StateFlow<List<Job>> get() = _jobs
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
 
     init {
         loadJobs()
@@ -21,9 +24,11 @@ class HomeFeedViewModel : ViewModel() {
 
     private fun loadJobs() {
         viewModelScope.launch {
+            _isLoading.value = true
             jobRepository.getJobs()
                 .onSuccess { _jobs.value = it }
                 .onFailure { println("ERROR: ${it.message}") }
+            _isLoading.value = false
         }
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -44,17 +45,49 @@ private val ChambaPeBlue    = Color(0xFF0B57D0)
 private val TextPrimary     = Color(0xFF1D1B20)
 private val TextSecondary   = Color(0xFF49454F)
 
+private fun statusLabel(status: String) = when (status.uppercase()) {
+    "PUBLISHED"   -> "● Disponible"
+    "IN_PROGRESS" -> "● En progreso"
+    "CLOSED"      -> "● Cerrado"
+    else          -> "● $status"
+}
+
+private fun statusBackgroundColor(status: String) = when (status.uppercase()) {
+    "PUBLISHED"   -> Color(0xFFE8F5E9)
+    "IN_PROGRESS" -> Color(0xFFE3F2FD)
+    "CLOSED"      -> Color(0xFFFFEEEE)
+    else          -> Color(0xFFF5F5F5)
+}
+
+private fun statusTextColor(status: String) = when (status.uppercase()) {
+    "PUBLISHED"   -> Color(0xFF43A047)
+    "IN_PROGRESS" -> Color(0xFF1E88E5)
+    "CLOSED"      -> Color(0xFFE53935)
+    else          -> Color(0xFF757575)
+}
+
 @Composable
 fun HomeFeedScreen(
     viewModel: HomeFeedViewModel = viewModel(),
     onJobClick: (jobId: String) -> Unit
 ) {
-    val jobs by viewModel.jobs.collectAsState()
+    val jobs      by viewModel.jobs.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color    = BackgroundGray
     ) {
+        if (isLoading) {
+            Box(
+                modifier        = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = ChambaPeBlue)
+            }
+            return@Surface
+        }
+
         LazyColumn(
             contentPadding      = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -123,14 +156,14 @@ fun HomeFeedScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50.dp))
-                                    .background(Color(0xFFE8F5E9))
+                                    .background(statusBackgroundColor(job.status))
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text(
-                                    text       = "● Available",
+                                    text       = statusLabel(job.status),
                                     fontSize   = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color      = Color(0xFF43A047)
+                                    color      = statusTextColor(job.status)
                                 )
                             }
 
