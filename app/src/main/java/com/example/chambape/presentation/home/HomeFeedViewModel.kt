@@ -2,27 +2,28 @@ package com.example.chambape.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.chambape.presentation.home.di.RepositoryModule.provideJobRepository
-import com.example.chambape.presentation.home.domain.model.Job
-import com.example.chambape.presentation.home.domain.repository.JobRepository
+import com.example.chambape.di.AppModule
+import com.example.chambape.domain.model.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class HomeFeedViewModel(
-    private val jobRepository: JobRepository = provideJobRepository()
-): ViewModel() {
+class HomeFeedViewModel : ViewModel() {
 
-    private val _jobs = MutableStateFlow<List<Job>>(value = emptyList())
+    private val jobRepository = AppModule.jobRepository
+
+    private val _jobs = MutableStateFlow<List<Job>>(emptyList())
     val jobs: StateFlow<List<Job>> get() = _jobs
 
-    fun getJobs() {
-        viewModelScope.launch {
-            _jobs.value = jobRepository.getJobs()
-        }
+    init {
+        loadJobs()
     }
 
-    init {
-        getJobs()
+    private fun loadJobs() {
+        viewModelScope.launch {
+            jobRepository.getJobs()
+                .onSuccess { _jobs.value = it }
+                .onFailure { println("ERROR: ${it.message}") }
+        }
     }
 }
