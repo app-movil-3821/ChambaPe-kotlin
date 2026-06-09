@@ -11,11 +11,11 @@ fun JobDto.toDomain() = Job(
     category       = category,
     requiredSkills = requiredSkills,
     paymentAmount  = paymentAmount,
-    latitude       = location.latitude,
-    longitude      = location.longitude,
-    address        = location.address,
-    district       = location.district,
-    scheduledStart = scheduledStart,
-    scheduledEnd   = scheduledEnd,
+    latitude       = location?.latitude  ?: 0.0,
+    longitude      = location?.longitude ?: 0.0,
+    address        = location?.address   ?: "",
+    district       = location?.district  ?: "",
+    scheduledStart = scheduledStart ?: "",
+    scheduledEnd   = scheduledEnd   ?: "",
     status         = status
 )

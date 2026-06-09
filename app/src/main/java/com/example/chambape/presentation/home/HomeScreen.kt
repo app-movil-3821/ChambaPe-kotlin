@@ -29,7 +29,6 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.QuestionMark
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -74,16 +73,26 @@ private val BorderGray       = Color(0xFFE1E4EC)
 fun JobDetailsScreen(
     jobId: String,
     onBack: () -> Unit,
-    onApply: (jobId: String) -> Unit
+    onApply: (jobId: String, contractorId: String) -> Unit
 ) {
+    val viewModel: JobDetailsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(jobId) { viewModel.loadJob(jobId) }
+
     Scaffold(
         containerColor = ScreenBackground,
         topBar = { JobDetailsTopBar(onBack = onBack, onShare = { }) },
         bottomBar = {
             Surface(color = ScreenBackground) {
                 Button(
-                    onClick = { onApply(jobId) },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp).navigationBarsPadding().height(54.dp),
+                    onClick = { uiState.job?.let { onApply(jobId, it.contractorId) } },
+                    enabled = uiState.job != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .navigationBarsPadding()
+                        .height(54.dp),
                     shape  = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = ChambaBlue, contentColor = Color.White)
                 ) {
@@ -92,54 +101,90 @@ fun JobDetailsScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp)
-        ) {
-            item {
-                Text(text = "Mesero - Café Central", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Storefront, null, tint = TextSecondary, modifier = Modifier.size(17.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Café Central", fontSize = 15.sp, color = TextSecondary)
-                    Spacer(Modifier.width(14.dp))
-                    Text("•", fontSize = 16.sp, color = Color(0xFFB0B4BE))
-                    Spacer(Modifier.width(14.dp))
-                    Icon(Icons.Outlined.Star, null, tint = Color(0xFFD66A2C), modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("4.8", fontSize = 16.sp, color = TextPrimary)
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = ChambaBlue)
                 }
-                Spacer(Modifier.height(24.dp))
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, BorderGray), elevation = CardDefaults.cardElevation(0.dp)) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Text("\$25 / hora", fontSize = 27.sp, fontWeight = FontWeight.Bold, color = ChambaBlue)
-                        Spacer(Modifier.height(10.dp))
+            }
+
+            uiState.errorMessage != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = uiState.errorMessage ?: "Error al cargar el trabajo.",
+                        fontSize = 16.sp,
+                        color = Color(0xFFD93025),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            uiState.job != null -> {
+                val job = uiState.job!!
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp)
+                ) {
+                    item {
+                        Text(text = job.title, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(10.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Hoy, 4:00 PM - 9:00 PM", fontSize = 15.sp, color = TextPrimary)
+                            Icon(Icons.Outlined.Storefront, null, tint = TextSecondary, modifier = Modifier.size(17.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(job.category, fontSize = 15.sp, color = TextSecondary)
+                            Spacer(Modifier.width(14.dp))
+                            Text("•", fontSize = 16.sp, color = Color(0xFFB0B4BE))
+                            Spacer(Modifier.width(14.dp))
+                            Icon(Icons.Outlined.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(17.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(job.district, fontSize = 15.sp, color = TextSecondary)
                         }
-                    }
-                }
-                Spacer(Modifier.height(30.dp))
-                Text("Detalles del Turno", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Spacer(Modifier.height(12.dp))
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, BorderGray), elevation = CardDefaults.cardElevation(0.dp)) {
-                    Text("Se requiere uniforme negro y buena disposición. El turno consistirá en atención a mesas en el área de terraza, toma de pedidos rápidos y apoyo en la limpieza de estaciones durante las horas pico de la tarde. Preferencia por candidatos con experiencia en uso de terminales punto de venta.", modifier = Modifier.padding(16.dp), fontSize = 16.sp, lineHeight = 23.sp, color = TextSecondary)
-                }
-                Spacer(Modifier.height(30.dp))
-                Text("Ubicación", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Spacer(Modifier.height(12.dp))
-                FakeMapPreview()
-                Spacer(Modifier.height(14.dp))
-                Row(verticalAlignment = Alignment.Top) {
-                    Icon(Icons.Outlined.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(20.dp).padding(top = 2.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Column {
-                        Text("Av. Revolución 1234, Zona Centro.", fontSize = 15.sp, color = TextSecondary)
-                        Spacer(Modifier.height(4.dp))
-                        Text("Entrada por la puerta lateral de servicio.", fontSize = 14.sp, color = Color(0xFF8A8F99))
+                        Spacer(Modifier.height(24.dp))
+                        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, BorderGray), elevation = CardDefaults.cardElevation(0.dp)) {
+                            Column(modifier = Modifier.padding(18.dp)) {
+                                Text("S/ ${job.paymentAmount}", fontSize = 27.sp, fontWeight = FontWeight.Bold, color = ChambaBlue)
+                                Spacer(Modifier.height(10.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Outlined.AccessTime, null, tint = TextSecondary, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "${formatShiftHour(job.scheduledStart)} - ${formatShiftHour(job.scheduledEnd)}",
+                                        fontSize = 15.sp,
+                                        color = TextPrimary
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(30.dp))
+                        Text("Detalles del Turno", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                        Spacer(Modifier.height(12.dp))
+                        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, BorderGray), elevation = CardDefaults.cardElevation(0.dp)) {
+                            Text(job.description, modifier = Modifier.padding(16.dp), fontSize = 16.sp, lineHeight = 23.sp, color = TextSecondary)
+                        }
+                        if (job.requiredSkills.isNotEmpty()) {
+                            Spacer(Modifier.height(30.dp))
+                            Text("Habilidades requeridas", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                            Spacer(Modifier.height(12.dp))
+                            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, BorderGray), elevation = CardDefaults.cardElevation(0.dp)) {
+                                Text(job.requiredSkills.joinToString(" • "), modifier = Modifier.padding(16.dp), fontSize = 15.sp, color = TextSecondary)
+                            }
+                        }
+                        Spacer(Modifier.height(30.dp))
+                        Text("Ubicación", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                        Spacer(Modifier.height(12.dp))
+                        FakeMapPreview()
+                        Spacer(Modifier.height(14.dp))
+                        Row(verticalAlignment = Alignment.Top) {
+                            Icon(Icons.Outlined.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(20.dp).padding(top = 2.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("${job.address}, ${job.district}", fontSize = 15.sp, color = TextSecondary)
+                        }
                     }
                 }
             }
@@ -444,7 +489,7 @@ private fun getShiftStatusText(status: String): String {
 @Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFF8F7FD, widthDp = 393, heightDp = 852)
 @Composable
 fun JobDetailsScreenPreview() {
-    JobDetailsScreen(jobId = "1", onBack = { }, onApply = { })
+    JobDetailsScreen(jobId = "1", onBack = { }, onApply = { _, _ -> })
 }
 
 @Preview(

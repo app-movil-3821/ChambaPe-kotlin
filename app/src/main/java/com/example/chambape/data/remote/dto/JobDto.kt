@@ -9,9 +9,9 @@ data class JobDto(
     val category: String,
     val requiredSkills: List<String> = emptyList(),
     val paymentAmount: Double,
-    val location: LocationDto,
-    val scheduledStart: String,
-    val scheduledEnd: String,
+    val location: LocationDto? = null,
+    val scheduledStart: String? = null,
+    val scheduledEnd: String? = null,
     val status: String,
     val createdAt: String = "",
     val updatedAt: String = ""

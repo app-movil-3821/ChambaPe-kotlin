@@ -61,8 +61,8 @@ private val ErrorRed     = Color(0xFFD93025)
 
 fun validateEmail(email: String): String? {
     if (email.isBlank()) return "El email es requerido"
-    if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches())
-        return "Ingresa un email válido"
+    val regex = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+    if (!regex.matches(email.trim())) return "Ingresa un email válido"
     return null
 }
 
@@ -152,6 +152,8 @@ fun LoginScreen(
                 singleLine      = true,
                 shape           = RoundedCornerShape(12.dp),
                 colors          = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor     = Color(0xFF0D0D0D),
+                    unfocusedTextColor   = Color(0xFF0D0D0D),
                     focusedBorderColor   = ChambaPeBlue,
                     unfocusedBorderColor = Color(0xFFDDDDDD),
                     errorBorderColor     = ErrorRed
@@ -191,6 +193,8 @@ fun LoginScreen(
                 singleLine           = true,
                 shape                = RoundedCornerShape(12.dp),
                 colors               = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor     = Color(0xFF0D0D0D),
+                    unfocusedTextColor   = Color(0xFF0D0D0D),
                     focusedBorderColor   = ChambaPeBlue,
                     unfocusedBorderColor = Color(0xFFDDDDDD),
                     errorBorderColor     = ErrorRed
