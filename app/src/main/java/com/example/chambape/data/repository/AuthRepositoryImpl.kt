@@ -3,6 +3,7 @@ package com.example.chambape.data.repository
 import com.example.chambape.data.mapper.toDomain
 import com.example.chambape.data.remote.dto.LoginRequest
 import com.example.chambape.data.remote.dto.RegisterRequest
+import com.example.chambape.data.remote.dto.UpdateUserRequest
 import com.example.chambape.data.remote.service.AuthService
 import com.example.chambape.domain.model.User
 import com.example.chambape.domain.repository.AuthRepository
@@ -15,15 +16,15 @@ class AuthRepositoryImpl(
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
             val response = authService.login(LoginRequest(email, password))
-            // Guardar token para usarlo en requests protegidas
-            tokenManager.saveToken(response.token)
-            tokenManager.saveUserId(response.userId)
-            // Retornar usuario básico del login response
+            val token  = response.token  ?: return Result.failure(Exception("Respuesta inválida del servidor (token ausente)."))
+            val userId = response.userId ?: return Result.failure(Exception("Respuesta inválida del servidor (userId ausente)."))
+            tokenManager.saveToken(token)
+            tokenManager.saveUserId(userId)
             val user = User(
-                id         = response.userId,
-                name       = response.name,
-                email      = response.email,
-                role       = response.role,
+                id         = userId,
+                name       = response.name  ?: "",
+                email      = response.email ?: email,
+                role       = response.role  ?: "",
                 phone      = "",
                 skills     = emptyList(),
                 experience = "",
@@ -32,6 +33,34 @@ class AuthRepositoryImpl(
                 verified   = false
             )
             Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUser(userId: String): Result<User> {
+        return try {
+            val dto = authService.getUser(userId)
+            Result.success(dto.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUser(
+        userId: String,
+        name: String,
+        phone: String,
+        skills: List<String>,
+        experience: String,
+        district: String
+    ): Result<User> {
+        return try {
+            val dto = authService.updateUser(
+                userId,
+                UpdateUserRequest(name = name, phone = phone, skills = skills, experience = experience, district = district)
+            )
+            Result.success(dto.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }
