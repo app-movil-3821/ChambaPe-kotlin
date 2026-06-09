@@ -18,14 +18,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,27 +77,125 @@ fun HomeFeedScreen(
     viewModel: HomeFeedViewModel = viewModel(),
     onJobClick: (jobId: String) -> Unit
 ) {
-    val jobs      by viewModel.jobs.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val jobs         by viewModel.jobs.collectAsState()
+    val isLoading    by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val userName     by viewModel.userName.collectAsState()
+    val searchQuery  by viewModel.searchQuery.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color    = BackgroundGray
     ) {
-        if (isLoading) {
-            Box(
-                modifier        = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = ChambaPeBlue)
+        when {
+            isLoading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = ChambaPeBlue)
+                }
+                return@Surface
             }
-            return@Surface
+
+            errorMessage != null -> {
+                Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text      = errorMessage!!,
+                            fontSize  = 15.sp,
+                            color     = Color(0xFFD93025),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Button(
+                            onClick = { viewModel.loadJobs() },
+                            colors  = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue),
+                            shape   = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("Reintentar", color = Color.White)
+                        }
+                    }
+                }
+                return@Surface
+            }
+
+            jobs.isEmpty() -> {
+                val isFiltering = viewModel.searchQuery.value.isNotBlank()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Outlined.WorkOutline,
+                            contentDescription = null,
+                            tint     = Color(0xFFCCCCCC),
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text     = if (isFiltering) "Sin resultados para \"${viewModel.searchQuery.value}\"."
+                                       else "No hay trabajos disponibles.",
+                            fontSize = 15.sp,
+                            color    = TextSecondary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp)
+                        )
+                        if (!isFiltering) {
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = { viewModel.loadJobs() },
+                                colors  = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue),
+                                shape   = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Actualizar", color = Color.White)
+                            }
+                        }
+                    }
+                }
+                return@Surface
+            }
         }
 
         LazyColumn(
             contentPadding      = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                Text(
+                    text       = if (userName.isNotBlank()) "¡Hola, $userName! 👋" else "¡Hola!",
+                    fontSize   = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color      = TextPrimary,
+                    modifier   = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text     = "Estos son los trabajos disponibles",
+                    fontSize = 14.sp,
+                    color    = TextSecondary,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                OutlinedTextField(
+                    value         = searchQuery,
+                    onValueChange = { viewModel.onSearchQueryChange(it) },
+                    modifier      = Modifier.fillMaxWidth(),
+                    placeholder   = { Text("Buscar por título, categoría o distrito…", fontSize = 14.sp) },
+                    leadingIcon   = { Icon(Icons.Outlined.Search, contentDescription = null, tint = TextSecondary) },
+                    trailingIcon  = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                Icon(Icons.Outlined.Close, contentDescription = "Limpiar", tint = TextSecondary)
+                            }
+                        }
+                    },
+                    singleLine    = true,
+                    shape         = RoundedCornerShape(14.dp),
+                    colors        = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor     = TextPrimary,
+                        unfocusedTextColor   = TextPrimary,
+                        focusedContainerColor   = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor   = ChambaPeBlue,
+                        unfocusedBorderColor = Color(0xFFDDDDDD)
+                    )
+                )
+                Spacer(Modifier.height(4.dp))
+            }
             items(jobs) { job ->
                 Card(
                     modifier  = Modifier.fillMaxWidth(),

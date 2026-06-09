@@ -36,27 +36,30 @@ fun HomeNavHost(
             JobDetailsScreen(
                 jobId   = back.arguments?.getString("jobId") ?: "",
                 onBack  = { navController.popBackStack() },
-                onApply = { jobId ->
-                    navController.navigate(Routes.Apply.createRoute(jobId))
+                onApply = { jobId, contractorId ->
+                    navController.navigate(Routes.Apply.createRoute(jobId, contractorId))
                 }
             )
         }
 
         composable(
             route     = Routes.Apply.route,
-            arguments = listOf(navArgument("jobId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("jobId")        { type = NavType.StringType },
+                navArgument("contractorId") { type = NavType.StringType }
+            )
         ) { back ->
+            val jobId        = back.arguments?.getString("jobId") ?: ""
+            val contractorId = back.arguments?.getString("contractorId") ?: ""
             ApplyScreen(
-                jobId       = back.arguments?.getString("jobId") ?: "",
-                onConfirmed = {
-                    navController.navigate(
-                        Routes.ActiveShift.createRoute(
-                            back.arguments?.getString("jobId") ?: ""
-                        )
-                    ) {
+                jobId        = jobId,
+                contractorId = contractorId,
+                onConfirmed  = {
+                    navController.navigate(Routes.ActiveShift.createRoute(jobId)) {
                         popUpTo(Routes.HomeFeed.route)
                     }
-                }
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 
