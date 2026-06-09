@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.SupportAgent
@@ -64,6 +64,8 @@ fun HelpScreen(
 ) {
     var problemType by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         containerColor = ScreenBackground,
@@ -73,7 +75,30 @@ fun HelpScreen(
         bottomBar = {
             Surface(color = ScreenBackground) {
                 Button(
-                    onClick = onSendMessage,
+                    onClick = {
+                        when {
+                            problemType.isBlank() -> {
+                                errorMessage = "Ingresa el tipo de problema."
+                                successMessage = null
+                            }
+
+                            description.isBlank() -> {
+                                errorMessage = "Describe brevemente el problema."
+                                successMessage = null
+                            }
+
+                            else -> {
+                                errorMessage = null
+                                successMessage = "Solicitud enviada correctamente."
+
+                                /*
+                                 * Por ahora no se conecta al backend.
+                                 * Este callback mantiene la navegación o acción definida en HomeNavHost.
+                                 */
+                                onSendMessage()
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 16.dp)
@@ -107,7 +132,9 @@ fun HelpScreen(
         ) {
             item {
                 HelpHeaderCard()
+
                 Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
                     text = "Tipo de Problema",
                     fontSize = 17.sp,
@@ -119,7 +146,11 @@ fun HelpScreen(
 
                 OutlinedTextField(
                     value = problemType,
-                    onValueChange = { problemType = it },
+                    onValueChange = {
+                        problemType = it
+                        errorMessage = null
+                        successMessage = null
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(66.dp),
@@ -132,13 +163,35 @@ fun HelpScreen(
                         unfocusedBorderColor = BorderGray
                     )
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = "Descripción",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = {
+                        description = it
+                        errorMessage = null
+                        successMessage = null
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(154.dp),
+                    placeholder = {
+                        Text(
+                            text = "Describe brevemente lo que ocurrió",
+                            color = TextSecondary,
+                            fontSize = 14.sp
+                        )
+                    },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
@@ -147,6 +200,27 @@ fun HelpScreen(
                         unfocusedBorderColor = BorderGray
                     )
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        fontSize = 13.sp,
+                        color = Color(0xFFD93025),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                successMessage?.let { message ->
+                    Text(
+                        text = message,
+                        fontSize = 13.sp,
+                        color = Color(0xFF2E9E6B),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Text(
@@ -155,6 +229,7 @@ fun HelpScreen(
                     fontWeight = FontWeight.Medium,
                     color = TextPrimary
                 )
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 UploadEvidenceBox()
@@ -162,7 +237,6 @@ fun HelpScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 HelpNoteBox()
-
             }
         }
     }
@@ -189,7 +263,7 @@ private fun HelpTopBar(
                 .background(Color(0xFFF0F1F7))
         ) {
             Icon(
-                imageVector = Icons.Outlined.ArrowBack,
+                imageVector = Icons.Outlined.ArrowBackIosNew,
                 contentDescription = "Volver",
                 tint = Color(0xFF687083)
             )

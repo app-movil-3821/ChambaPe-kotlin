@@ -63,13 +63,16 @@ fun HomeNavHost(
         composable(
             route     = Routes.ActiveShift.route,
             arguments = listOf(navArgument("jobId") { type = NavType.StringType })
-        ) {
+        ) { back ->
+            val jobId = back.arguments?.getString("jobId") ?: ""
             ActiveShiftScreen(
-                onClose          = {
+                jobId = jobId,
+                onClose = {
                     navController.popBackStack(Routes.HomeFeed.route, inclusive = false)
                 },
                 onConfirmArrival = {
-                    mainNavController.navigate(Routes.ShiftSummary.createRoute("1")) {
+                    println("JOB ID ENVIADO A SUMMARY: $jobId")
+                    mainNavController.navigate(Routes.ShiftSummary.createRoute(jobId)) {
                         popUpTo(Routes.HomeFeed.route)
                     }
                 },

@@ -52,6 +52,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.chambape.domain.model.Job
 import com.example.chambape.ui.theme.ChambaPeTheme
 
 private val ChambaBlue       = Color(0xFF0B57D0)
@@ -141,10 +149,26 @@ fun JobDetailsScreen(
 
 @Composable
 fun ActiveShiftScreen(
+    jobId: String,
     onClose: () -> Unit,
     onConfirmArrival: () -> Unit,
-    onHelp: () -> Unit
+    onHelp: () -> Unit,
+    previewUiState: ActiveShiftUiState? = null
 ) {
+    val runtimeViewModel: ActiveShiftViewModel? =
+        if (previewUiState == null) viewModel() else null
+
+    val uiState by if (previewUiState != null) {
+        remember { mutableStateOf(previewUiState) }
+    } else {
+        runtimeViewModel!!.uiState.collectAsState()
+    }
+
+    LaunchedEffect(jobId, previewUiState) {
+        if (previewUiState == null) {
+            runtimeViewModel?.loadJob(jobId)
+        }
+    }
     Scaffold(
         containerColor = ScreenBackground,
         topBar = { ActiveShiftTopBar(onClose = onClose) },
@@ -175,42 +199,194 @@ fun ActiveShiftScreen(
             }
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(Modifier.height(24.dp))
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = Color.White), border = BorderStroke(1.dp, BorderGray), elevation = CardDefaults.cardElevation(0.dp)) {
-                Box(modifier = Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Color.White, Color(0xFFF4FFF5), Color(0xFFF2F6FF)))).padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(modifier = Modifier.size(78.dp).clip(CircleShape).background(Color(0xFFF0EFFB)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.Storefront, null, tint = ChambaBlue, modifier = Modifier.size(34.dp))
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        Text("Café Central", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Spacer(Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(17.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Av. Reforma 222, CDMX", fontSize = 15.sp, color = TextSecondary)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            when {
+                uiState.isLoading -> {
+                    Spacer(Modifier.height(80.dp))
+
+                    CircularProgressIndicator(color = ChambaBlue)
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        text = "Cargando turno...",
+                        fontSize = 16.sp,
+                        color = TextSecondary
+                    )
+                }
+
+                uiState.errorMessage != null -> {
+                    Spacer(Modifier.height(80.dp))
+
+                    Text(
+                        text = uiState.errorMessage ?: "Error al cargar el turno.",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFFD93025)
+                    )
+                }
+
+                uiState.job != null -> {
+                    val job = uiState.job!!
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        border = BorderStroke(1.dp, BorderGray),
+                        elevation = CardDefaults.cardElevation(0.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            Color.White,
+                                            Color(0xFFF4FFF5),
+                                            Color(0xFFF2F6FF)
+                                        )
+                                    )
+                                )
+                                .padding(vertical = 18.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(78.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFF0EFFB)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Storefront,
+                                        null,
+                                        tint = ChambaBlue,
+                                        modifier = Modifier.size(34.dp)
+                                    )
+                                }
+
+                                Spacer(Modifier.height(16.dp))
+
+                                Text(
+                                    text = job.title,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+
+                                Spacer(Modifier.height(8.dp))
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Outlined.LocationOn,
+                                        null,
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(17.dp)
+                                    )
+
+                                    Spacer(Modifier.width(6.dp))
+
+                                    Text(
+                                        text = "${job.address}, ${job.district}",
+                                        fontSize = 15.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
                         }
                     }
+
+                    Spacer(Modifier.height(46.dp))
+
+                    Text(
+                        text = "HORARIO DEL TURNO",
+                        fontSize = 12.sp,
+                        letterSpacing = 1.2.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF7D8290)
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.AccessTime,
+                            null,
+                            tint = Color(0xFFC2C7D3),
+                            modifier = Modifier.size(28.dp)
+                        )
+
+                        Spacer(Modifier.width(12.dp))
+
+                        Text(
+                            text = formatShiftHour(job.scheduledStart),
+                            fontSize = 31.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+
+                        Spacer(Modifier.width(10.dp))
+
+                        Text(
+                            text = "–",
+                            fontSize = 28.sp,
+                            color = Color(0xFFD2D5DD)
+                        )
+
+                        Spacer(Modifier.width(10.dp))
+
+                        Text(
+                            text = formatShiftHour(job.scheduledEnd),
+                            fontSize = 31.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    }
+
+                    Spacer(Modifier.height(22.dp))
+
+                    Text(
+                        text = "Pago: S/ ${job.paymentAmount}",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ChambaBlue
+                    )
+
+                    Spacer(Modifier.height(28.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(Color(0xFFF0EFF7))
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(ChambaBlue)
+                        )
+
+                        Spacer(Modifier.width(12.dp))
+
+                        Text(
+                            text = getShiftStatusText(job.status),
+                            fontSize = 16.sp,
+                            color = TextSecondary
+                        )
+                    }
                 }
-            }
-            Spacer(Modifier.height(56.dp))
-            Text("HORARIO DEL TURNO", fontSize = 12.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Medium, color = Color(0xFF7D8290))
-            Spacer(Modifier.height(14.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.AccessTime, null, tint = Color(0xFFC2C7D3), modifier = Modifier.size(28.dp))
-                Spacer(Modifier.width(12.dp))
-                Text("4:00 PM", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                Spacer(Modifier.width(10.dp))
-                Text("–", fontSize = 28.sp, color = Color(0xFFD2D5DD))
-                Spacer(Modifier.width(10.dp))
-                Text("9:00 PM", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-            }
-            Spacer(Modifier.height(28.dp))
-            Row(modifier = Modifier.clip(RoundedCornerShape(50.dp)).background(Color(0xFFF0EFF7)).padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(ChambaBlue))
-                Spacer(Modifier.width(12.dp))
-                Text("Esperando llegada...", fontSize = 16.sp, color = TextSecondary)
             }
         }
     }
@@ -246,16 +422,66 @@ private fun FakeMapPreview() {
     }
 }
 
+private fun formatShiftHour(dateTime: String): String {
+    return if (dateTime.length >= 16) {
+        dateTime.substring(11, 16)
+    } else {
+        dateTime
+    }
+}
+
+private fun getShiftStatusText(status: String): String {
+    return when (status) {
+        "PUBLISHED" -> "Turno publicado"
+        "MATCHED" -> "Turno asignado"
+        "IN_PROGRESS" -> "Turno en progreso"
+        "COMPLETED" -> "Turno completado"
+        "CLOSED" -> "Turno cerrado"
+        else -> status
+    }
+}
+
 @Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFF8F7FD, widthDp = 393, heightDp = 852)
 @Composable
 fun JobDetailsScreenPreview() {
     JobDetailsScreen(jobId = "1", onBack = { }, onApply = { })
 }
 
-@Preview(showBackground = true, showSystemUi = true, backgroundColor = 0xFFF8F7FD, widthDp = 393, heightDp = 852)
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+    backgroundColor = 0xFFF8F7FD,
+    widthDp = 393,
+    heightDp = 852
+)
 @Composable
 private fun ActiveShiftScreenPreview() {
     ChambaPeTheme {
-        ActiveShiftScreen(onClose = { }, onConfirmArrival = { }, onHelp = { })
+        ActiveShiftScreen(
+            jobId = "preview-job",
+            onClose = { },
+            onConfirmArrival = { },
+            onHelp = { },
+            previewUiState = ActiveShiftUiState(
+                isLoading = false,
+                job = Job(
+                    id = "preview-job",
+                    contractorId = "preview-contractor",
+                    title = "Apoyo en minimarket por turno de mañana",
+                    description = "Atención al cliente, reposición de productos y orden del local.",
+                    category = "Atención al cliente",
+                    requiredSkills = listOf("puntualidad", "orden", "atención al cliente"),
+                    paymentAmount = 70.0,
+                    latitude = -12.0875,
+                    longitude = -76.9287,
+                    address = "Av. Raúl Ferrero 1200",
+                    district = "La Molina",
+                    scheduledStart = "2026-06-15T08:00:00",
+                    scheduledEnd = "2026-06-15T14:00:00",
+                    status = "IN_PROGRESS"
+                ),
+                errorMessage = null
+            )
+        )
     }
 }
