@@ -26,7 +26,6 @@ import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,11 +34,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -56,14 +55,18 @@ private val TextSecondary  = Color(0xFF6B6B6B)
 
 @Composable
 fun ProfileScreen(
-    onGoToEditProfile: () -> Unit = {},
-    onGoToMyShifts:    () -> Unit = {},
-    onGoToSettings:    () -> Unit = {},
-    onGoToWallet:      () -> Unit = {},
-    onGoToSkills:      () -> Unit = {},
-    onLogout:          () -> Unit = {}
+    onGoToEditProfile:    () -> Unit = {},
+    onGoToMyShifts:       () -> Unit = {},
+    onGoToSettings:       () -> Unit = {},
+    onGoToWallet:         () -> Unit = {},
+    onGoToSkills:         () -> Unit = {},
+    onGoToNotifications:  () -> Unit = {},
+    onLogout:             () -> Unit = {}
 ) {
-    val selectedSkills = remember { mutableStateOf(listOf("Mesero", "Cajero")) }
+    val viewModel: ProfileViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) { viewModel.load() }
 
     Surface(modifier = Modifier.fillMaxSize(), color = BackgroundGray) {
         Column(
@@ -71,12 +74,8 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Top bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier              = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -85,7 +84,7 @@ fun ProfileScreen(
                 }
                 Text(text = "ChambaYa", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = ChambaBlue)
                 Box {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { onGoToNotifications() }) {
                         Icon(Icons.Outlined.Notifications, contentDescription = null, tint = TextPrimary)
                     }
                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color.Red).align(Alignment.TopEnd))
@@ -94,36 +93,48 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Avatar — tap para editar perfil
-            Column(modifier = Modifier.fillMaxWidth().clickable { onGoToEditProfile() }, horizontalAlignment = Alignment.CenterHorizontally) {
+            // Avatar + name
+            Column(
+                modifier            = Modifier.fillMaxWidth().clickable { onGoToEditProfile() },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
                     Box(
-                        modifier = Modifier.size(90.dp).clip(CircleShape).background(Color(0xFFE8EDFB)).border(2.dp, ChambaBlue, CircleShape),
+                        modifier         = Modifier.size(90.dp).clip(CircleShape).background(Color(0xFFE8EDFB)).border(2.dp, ChambaBlue, CircleShape),
                         contentAlignment = Alignment.Center
                     ) { Text(text = "😊", fontSize = 44.sp) }
-                    Box(
-                        modifier = Modifier.size(24.dp).clip(CircleShape).background(Color(0xFF22C55E)),
-                        contentAlignment = Alignment.Center
-                    ) { Text(text = "✓", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold) }
+                    if (uiState.user?.verified == true) {
+                        Box(
+                            modifier         = Modifier.size(24.dp).clip(CircleShape).background(Color(0xFF22C55E)),
+                            contentAlignment = Alignment.Center
+                        ) { Text(text = "✓", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold) }
+                    }
                 }
                 Spacer(Modifier.height(12.dp))
-                Text(text = "Diego", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                Text(
+                    text       = uiState.user?.name ?: if (uiState.isLoading) "Cargando..." else "–",
+                    fontSize   = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color      = TextPrimary
+                )
                 Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Star, contentDescription = null, tint = Color(0xFFFBBC04), modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(text = "4.8 (124 reseñas)", fontSize = 14.sp, color = TextSecondary)
+                if (uiState.user?.email != null) {
+                    Text(text = uiState.user!!.email, fontSize = 14.sp, color = TextSecondary)
+                    Spacer(Modifier.height(2.dp))
+                }
+                if (uiState.user?.district?.isNotBlank() == true) {
+                    Text(text = uiState.user!!.district, fontSize = 13.sp, color = TextSecondary)
                 }
             }
 
             Spacer(Modifier.height(24.dp))
 
-            // Habilidades
+            // Skills
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier              = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment     = Alignment.CenterVertically
                 ) {
                     Text(text = "Habilidades", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                     IconButton(
@@ -134,20 +145,30 @@ fun ProfileScreen(
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    selectedSkills.value.forEachIndexed { index, skill ->
-                        val isFirst = index == 0
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isFirst) ChambaBlue else Color.White)
-                                .border(1.dp, if (isFirst) Color.Transparent else Color(0xFFDDDDDD), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 20.dp, vertical = 12.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = if (skill == "Mesero") "🍽️" else "🏧", fontSize = 16.sp)
-                                Spacer(Modifier.width(8.dp))
-                                Text(text = skill, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = if (isFirst) Color.White else TextPrimary)
+                val skills = uiState.user?.skills ?: emptyList()
+                if (skills.isEmpty()) {
+                    Text(
+                        text     = if (uiState.isLoading) "Cargando..." else "Sin habilidades registradas.",
+                        fontSize = 14.sp,
+                        color    = TextSecondary
+                    )
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        skills.forEachIndexed { index, skill ->
+                            val isFirst = index == 0
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isFirst) ChambaBlue else Color.White)
+                                    .border(1.dp, if (isFirst) Color.Transparent else Color(0xFFDDDDDD), RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text       = skill,
+                                    fontSize   = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color      = if (isFirst) Color.White else TextPrimary
+                                )
                             }
                         }
                     }
@@ -156,17 +177,17 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Gestión
+            // Menu
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(text = "Gestión", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 Spacer(Modifier.height(10.dp))
                 Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
                     Column {
-                        ProfileMenuItem(icon = Icons.Outlined.Work,       label = "Mis Turnos",    onClick = { onGoToMyShifts() })
+                        ProfileMenuItem(icon = Icons.Outlined.Work,      label = "Mis Turnos",    onClick = { onGoToMyShifts() })
                         MenuDivider()
-                        ProfileMenuItem(icon = Icons.Outlined.CreditCard,  label = "Billetera",     onClick = { onGoToWallet() })
+                        ProfileMenuItem(icon = Icons.Outlined.CreditCard, label = "Billetera",     onClick = { onGoToWallet() })
                         MenuDivider()
-                        ProfileMenuItem(icon = Icons.Outlined.Settings,    label = "Configuración", onClick = { onGoToSettings() })
+                        ProfileMenuItem(icon = Icons.Outlined.Settings,   label = "Configuración", onClick = { onGoToSettings() })
                     }
                 }
                 Spacer(Modifier.height(16.dp))

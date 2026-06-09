@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material.icons.outlined.Store
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,8 +39,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,150 +49,79 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.chambape.domain.model.Message
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
 private val ChambaBlue     = Color(0xFF1A3FD8)
 private val BackgroundGray = Color(0xFFF7F8FC)
 private val BubbleIncoming = Color(0xFFE9EAEF)
 private val BubbleOutgoing = ChambaBlue
 
-// ─── Domain models ────────────────────────────────────────────────────────────
-data class ChatPreview(
-    val id: String,
-    val name: String,
-    val lastMessage: String,
-    val time: String,
-    val unread: Int = 0,
-    val emoji: String = "🏪"
-)
-
-data class ChatMessage(
-    val id: String,
-    val text: String,
-    val time: String,
-    val isFromMe: Boolean,
-    val isRead: Boolean = true
-)
-
-// ─── Messages list screen ─────────────────────────────────────────────────────
 @Composable
 fun MessagesScreen(
-    onChatClick: (chatId: String) -> Unit
+    onChatClick: (conversationId: String, jobId: String) -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color    = BackgroundGray
-    ) {
+    val viewModel: MessagesViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) { viewModel.load() }
+
+    Surface(modifier = Modifier.fillMaxSize(), color = BackgroundGray) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier              = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text       = "Mensajes",
-                    fontSize   = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color      = Color(0xFF0D0D0D)
-                )
-                Icon(
-                    imageVector        = Icons.Outlined.MoreVert,
-                    contentDescription = null,
-                    tint               = Color(0xFF9E9E9E)
-                )
+                Text("Mensajes", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0D0D0D))
+                Icon(Icons.Outlined.MoreVert, contentDescription = null, tint = Color(0xFF9E9E9E))
             }
 
-            // Chat list
-            LazyColumn(
-                modifier       = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(ChatStore.chats) { chat ->
-                    ChatPreviewRow(chat = chat, onClick = { onChatClick(chat.id) })
-                    Divider(
-                        color    = Color(0xFFF0F0F0),
-                        modifier = Modifier.padding(horizontal = 72.dp)
-                    )
+            when {
+                uiState.isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = ChambaBlue)
+                            Spacer(Modifier.height(16.dp))
+                            Text("Cargando mensajes...", fontSize = 14.sp, color = Color(0xFF6B6B6B))
+                        }
+                    }
                 }
-            }
-        }
-    }
-}
 
-@Composable
-private fun ChatPreviewRow(chat: ChatPreview, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(Color(0xFFE8EEFF)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(chat.emoji, fontSize = 22.sp)
-        }
-
-        Spacer(Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Text(
-                    text       = chat.name,
-                    fontSize   = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color      = Color(0xFF0D0D0D)
-                )
-                Text(
-                    text     = chat.time,
-                    fontSize = 12.sp,
-                    color    = if (chat.unread > 0) ChambaBlue else Color(0xFF9E9E9E)
-                )
-            }
-            Spacer(Modifier.height(3.dp))
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Text(
-                    text     = chat.lastMessage,
-                    fontSize = 13.sp,
-                    color    = Color(0xFF6B6B6B),
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f)
-                )
-                if (chat.unread > 0) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(ChambaBlue),
-                        contentAlignment = Alignment.Center
-                    ) {
+                uiState.errorMessage != null -> {
+                    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            text     = chat.unread.toString(),
-                            fontSize = 11.sp,
-                            color    = Color.White,
-                            fontWeight = FontWeight.Bold
+                            text      = uiState.errorMessage ?: "Error al cargar mensajes.",
+                            fontSize  = 15.sp,
+                            color     = Color(0xFFD93025),
+                            textAlign = TextAlign.Center
                         )
+                    }
+                }
+
+                uiState.conversations.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                        Text(
+                            text      = "No tienes conversaciones aún.",
+                            fontSize  = 15.sp,
+                            color     = Color(0xFF6B6B6B),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+                        items(uiState.conversations) { conv ->
+                            ConversationRow(
+                                item    = conv,
+                                onClick = { onChatClick(conv.conversationId, conv.jobId) }
+                            )
+                            Divider(color = Color(0xFFF0F0F0), modifier = Modifier.padding(horizontal = 72.dp))
+                        }
                     }
                 }
             }
@@ -199,257 +129,202 @@ private fun ChatPreviewRow(chat: ChatPreview, onClick: () -> Unit) {
     }
 }
 
-// ─── Chat screen ──────────────────────────────────────────────────────────────
+@Composable
+private fun ConversationRow(item: ConversationItem, onClick: () -> Unit) {
+    Row(
+        modifier          = Modifier.fillMaxWidth().clickable { onClick() }.background(Color.White).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier         = Modifier.size(50.dp).clip(CircleShape).background(Color(0xFFE8EEFF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("🏪", fontSize = 22.sp)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(item.jobTitle, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0D0D0D))
+                Text(
+                    text     = if (item.createdAt.length >= 10) item.createdAt.substring(0, 10) else item.createdAt,
+                    fontSize = 12.sp,
+                    color    = Color(0xFF9E9E9E)
+                )
+            }
+            Spacer(Modifier.height(3.dp))
+            Text("Toca para ver mensajes", fontSize = 13.sp, color = Color(0xFF6B6B6B), maxLines = 1)
+        }
+    }
+}
+
 @Composable
 fun ChatScreen(
-    chatId: String,
+    conversationId: String,
+    jobId: String,
     onBack: () -> Unit
 ) {
-    val chatName  = ChatStore.nameOf(chatId)
-    val messages  = ChatStore.messagesFor(chatId)
+    val viewModel: ChatViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    // Al abrir el chat, se marca como leído (desaparece el badge).
-    LaunchedEffect(chatId) {
-        ChatStore.markAsRead(chatId)
+    LaunchedEffect(conversationId, jobId) { viewModel.load(conversationId, jobId) }
+
+    LaunchedEffect(uiState.messages.size) {
+        if (uiState.messages.isNotEmpty()) listState.animateScrollToItem(uiState.messages.size - 1)
     }
 
-    // Cada vez que llega/envía un mensaje, baja al final de la lista.
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size)
-        }
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color    = BackgroundGray
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-        ) {
-            // ── Top bar ──────────────────────────────────────────────────────
+    Surface(modifier = Modifier.fillMaxSize(), color = BackgroundGray) {
+        Column(modifier = Modifier.fillMaxSize().imePadding()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp, vertical = 10.dp),
+                modifier              = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 8.dp, vertical = 10.dp),
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector        = Icons.Outlined.ArrowBack,
-                        contentDescription = "Volver",
-                        tint               = ChambaBlue
-                    )
+                    Icon(Icons.Outlined.ArrowBack, "Volver", tint = ChambaBlue)
                 }
                 Text(
-                    text       = "Chat con $chatName",
+                    text       = if (uiState.jobTitle.isNotBlank()) uiState.jobTitle else "Chat",
                     fontSize   = 16.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color      = ChambaBlue
                 )
                 IconButton(onClick = {}) {
-                    Icon(
-                        imageVector        = Icons.Outlined.MoreVert,
-                        contentDescription = "Más opciones",
-                        tint               = Color(0xFF9E9E9E)
-                    )
+                    Icon(Icons.Outlined.MoreVert, "Más opciones", tint = Color(0xFF9E9E9E))
                 }
             }
 
-            // ── Message list ─────────────────────────────────────────────────
-            LazyColumn(
-                modifier       = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                state          = listState,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Date separator
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text     = "Hoy, 10:42 AM",
-                            fontSize = 12.sp,
-                            color    = Color(0xFF9E9E9E)
-                        )
+            when {
+                uiState.isLoading -> {
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = ChambaBlue)
                     }
-                    Spacer(Modifier.height(8.dp))
                 }
 
-                items(messages) { msg ->
-                    MessageBubble(message = msg)
+                else -> {
+                    LazyColumn(
+                        modifier            = Modifier.weight(1f).fillMaxWidth(),
+                        state               = listState,
+                        contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(uiState.messages) { msg ->
+                            MessageBubble(message = msg, isFromMe = msg.senderId == viewModel.currentUserId)
+                        }
+                    }
                 }
             }
 
-            // ── Input bar ────────────────────────────────────────────────────
+            if (uiState.sendError != null) {
+                Text(
+                    text     = uiState.sendError!!,
+                    fontSize = 12.sp,
+                    color    = Color(0xFFD93025),
+                    modifier = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                modifier          = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // + button
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF0F0F0))
-                        .clickable { },
+                    modifier         = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFF0F0F0)).clickable { },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector        = Icons.Outlined.Add,
-                        contentDescription = "Adjuntar",
-                        tint               = Color(0xFF6B6B6B),
-                        modifier           = Modifier.size(20.dp)
-                    )
+                    Icon(Icons.Outlined.Add, "Adjuntar", tint = Color(0xFF6B6B6B), modifier = Modifier.size(20.dp))
                 }
-
                 Spacer(Modifier.width(8.dp))
-
-                // Text field
                 OutlinedTextField(
                     value         = inputText,
                     onValueChange = { inputText = it },
                     modifier      = Modifier.weight(1f),
-                    placeholder   = {
-                        Text("Escribe un mensaje...", color = Color(0xFFAAAAAA), fontSize = 14.sp)
-                    },
-                    singleLine = true,
-                    shape      = RoundedCornerShape(24.dp),
-                    colors     = OutlinedTextFieldDefaults.colors(
+                    placeholder   = { Text("Escribe un mensaje...", color = Color(0xFFAAAAAA), fontSize = 14.sp) },
+                    singleLine    = true,
+                    shape         = RoundedCornerShape(24.dp),
+                    colors        = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = Color(0xFFF5F5F5),
                         focusedContainerColor   = Color(0xFFF5F5F5),
                         unfocusedBorderColor    = Color.Transparent,
                         focusedBorderColor      = ChambaBlue
                     )
                 )
-
                 Spacer(Modifier.width(8.dp))
-
-                // Send button
                 Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(ChambaBlue)
+                        .background(if (inputText.isNotBlank()) ChambaBlue else Color(0xFFCCCCCC))
                         .clickable {
-                            if (inputText.isNotBlank()) {
-                                ChatStore.send(chatId, inputText)
+                            val text = inputText.trim()
+                            if (text.isNotBlank()) {
                                 inputText = ""
+                                viewModel.send(conversationId, text)
                             }
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector        = Icons.Outlined.Send,
-                        contentDescription = "Enviar",
-                        tint               = Color.White,
-                        modifier           = Modifier.size(20.dp)
-                    )
+                    Icon(Icons.Outlined.Send, "Enviar", tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
         }
     }
 }
 
-// ─── Message bubble ───────────────────────────────────────────────────────────
 @Composable
-private fun MessageBubble(message: ChatMessage) {
+private fun MessageBubble(message: Message, isFromMe: Boolean) {
     Column(
         modifier            = Modifier.fillMaxWidth(),
-        horizontalAlignment = if (message.isFromMe) Alignment.End else Alignment.Start
+        horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start
     ) {
-        if (!message.isFromMe) {
-            // Sender avatar for incoming
+        if (!isFromMe) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE8EEFF)),
+                    modifier         = Modifier.size(32.dp).clip(CircleShape).background(Color(0xFFE8EEFF)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector        = Icons.Outlined.Store,
-                        contentDescription = null,
-                        tint               = ChambaBlue,
-                        modifier           = Modifier.size(16.dp)
-                    )
+                    Icon(Icons.Outlined.Store, null, tint = ChambaBlue, modifier = Modifier.size(16.dp))
                 }
                 Spacer(Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .widthIn(max = 260.dp)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart    = 18.dp,
-                                topEnd      = 18.dp,
-                                bottomEnd   = 18.dp,
-                                bottomStart = 4.dp
-                            )
-                        )
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 18.dp, bottomStart = 4.dp))
                         .background(BubbleIncoming)
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
-                    Text(
-                        text     = message.text,
-                        fontSize = 14.sp,
-                        color    = Color(0xFF0D0D0D)
-                    )
+                    Text(message.content, fontSize = 14.sp, color = Color(0xFF0D0D0D))
                 }
             }
         } else {
             Box(
                 modifier = Modifier
                     .widthIn(max = 260.dp)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart    = 18.dp,
-                            topEnd      = 18.dp,
-                            bottomEnd   = 4.dp,
-                            bottomStart = 18.dp
-                        )
-                    )
+                    .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 4.dp, bottomStart = 18.dp))
                     .background(BubbleOutgoing)
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
-                Text(
-                    text     = message.text,
-                    fontSize = 14.sp,
-                    color    = Color.White
-                )
+                Text(message.content, fontSize = 14.sp, color = Color.White)
             }
         }
 
-        // Timestamp + read receipts
         Spacer(Modifier.height(2.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = if (!message.isFromMe) Modifier.padding(start = 40.dp) else Modifier
+            modifier          = if (!isFromMe) Modifier.padding(start = 40.dp) else Modifier
         ) {
             Text(
-                text     = message.time,
+                text     = if (message.sentAt.length >= 16) message.sentAt.substring(11, 16) else message.sentAt,
                 fontSize = 11.sp,
                 color    = Color(0xFF9E9E9E)
             )
-            if (message.isFromMe) {
+            if (isFromMe) {
                 Spacer(Modifier.width(3.dp))
                 Icon(
-                    imageVector        = if (message.isRead) Icons.Outlined.DoneAll else Icons.Outlined.Done,
+                    imageVector        = if (message.read) Icons.Outlined.DoneAll else Icons.Outlined.Done,
                     contentDescription = null,
-                    tint               = if (message.isRead) ChambaBlue else Color(0xFF9E9E9E),
+                    tint               = if (message.read) ChambaBlue else Color(0xFF9E9E9E),
                     modifier           = Modifier.size(14.dp)
                 )
             }

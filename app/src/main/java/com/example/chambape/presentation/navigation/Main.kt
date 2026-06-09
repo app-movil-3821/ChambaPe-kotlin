@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.example.chambape.presentation.auth.SkillsScreen
 import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
+import com.example.chambape.presentation.notifications.NotificationsScreen
 import com.example.chambape.presentation.profile.EditProfileScreen
 import com.example.chambape.presentation.profile.ProfileScreen
 import com.example.chambape.presentation.profile.SettingsScreen
@@ -52,9 +53,10 @@ fun MainScreen() {
             // Tab: Shifts
             composable(Routes.MyShifts.route) {
                 MyShiftsScreen(
-                    onShiftClick = { shiftId ->
+                    onShiftClick         = { shiftId ->
                         navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
-                    }
+                    },
+                    onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
                 )
             }
             composable(
@@ -70,35 +72,45 @@ fun MainScreen() {
             // Tab: Messages
             composable(Routes.Messages.route) {
                 MessagesScreen(
-                    onChatClick = { chatId ->
-                        navController.navigate(Routes.Chat.createRoute(chatId))
+                    onChatClick = { conversationId, jobId ->
+                        navController.navigate(Routes.Chat.createRoute(conversationId, jobId))
                     }
                 )
             }
             composable(
                 route     = Routes.Chat.route,
-                arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+                arguments = listOf(
+                    navArgument("conversationId") { type = NavType.StringType },
+                    navArgument("jobId")          { type = NavType.StringType }
+                )
             ) { back ->
                 ChatScreen(
-                    chatId = back.arguments?.getString("chatId") ?: "",
-                    onBack = { navController.popBackStack() }
+                    conversationId = back.arguments?.getString("conversationId") ?: "",
+                    jobId          = back.arguments?.getString("jobId") ?: "",
+                    onBack         = { navController.popBackStack() }
                 )
             }
 
             // Tab: Profile
             composable(Routes.Profile.route) {
                 ProfileScreen(
-                    onGoToEditProfile = { navController.navigate(Routes.EditProfile.route) },
-                    onGoToMyShifts    = { navController.navigate(Routes.MyShiftsFromProfile.route) },
-                    onGoToSettings    = { navController.navigate(Routes.Settings.route) },
-                    onGoToWallet      = { navController.navigate(Routes.Wallet.route) },
-                    onGoToSkills      = { navController.navigate(Routes.SkillsFromProfile.route) },
-                    onLogout          = {
+                    onGoToEditProfile   = { navController.navigate(Routes.EditProfile.route) },
+                    onGoToMyShifts      = { navController.navigate(Routes.MyShiftsFromProfile.route) },
+                    onGoToSettings      = { navController.navigate(Routes.Settings.route) },
+                    onGoToWallet        = { navController.navigate(Routes.Wallet.route) },
+                    onGoToSkills        = { navController.navigate(Routes.SkillsFromProfile.route) },
+                    onGoToNotifications = { navController.navigate(Routes.Notifications.route) },
+                    onLogout            = {
                         navController.navigate(Routes.Start.route) {
                             popUpTo(Routes.Main.route) { inclusive = true }
                         }
                     }
                 )
+            }
+
+            // Notifications
+            composable(Routes.Notifications.route) {
+                NotificationsScreen(onBack = { navController.popBackStack() })
             }
 
             // Edit Profile
@@ -126,10 +138,11 @@ fun MainScreen() {
             // MyShifts desde Profile (con back)
             composable(Routes.MyShiftsFromProfile.route) {
                 MyShiftsScreen(
-                    onShiftClick = { shiftId ->
+                    onShiftClick         = { shiftId ->
                         navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
                     },
-                    onBack = { navController.popBackStack() }
+                    onBack               = { navController.popBackStack() },
+                    onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
                 )
             }
 
