@@ -9,11 +9,11 @@ data class LoginRequest(
 
 
 data class LoginResponse(
-    val token: String,
-    val userId: String,
-    val name: String,
-    val email: String,
-    val role: String
+    val token: String? = null,
+    val userId: String? = null,
+    val name: String? = null,
+    val email: String? = null,
+    val role: String? = null
 )
 
 
@@ -26,4 +26,12 @@ data class RegisterRequest(
     val experience: String = "",
     val district: String = "",
     val phone: String
+)
+
+data class UpdateUserRequest(
+    val name: String,
+    val phone: String,
+    val skills: List<String> = emptyList(),
+    val experience: String = "",
+    val district: String = ""
 )

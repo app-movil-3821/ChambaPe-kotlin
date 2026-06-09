@@ -14,4 +14,13 @@ interface AuthRepository {
         district: String,
         phone: String
     ): Result<User>
+    suspend fun getUser(userId: String): Result<User>
+    suspend fun updateUser(
+        userId: String,
+        name: String,
+        phone: String,
+        skills: List<String>,
+        experience: String,
+        district: String
+    ): Result<User>
 }
