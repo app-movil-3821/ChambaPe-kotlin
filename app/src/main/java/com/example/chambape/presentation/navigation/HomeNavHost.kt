@@ -71,7 +71,6 @@ fun HomeNavHost(
                     navController.popBackStack(Routes.HomeFeed.route, inclusive = false)
                 },
                 onConfirmArrival = {
-                    println("JOB ID ENVIADO A SUMMARY: $jobId")
                     mainNavController.navigate(Routes.ShiftSummary.createRoute(jobId)) {
                         popUpTo(Routes.HomeFeed.route)
                     }
