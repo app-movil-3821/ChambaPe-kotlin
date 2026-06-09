@@ -18,8 +18,8 @@ sealed class Routes(val route: String) {
     object JobDetails  : Routes("job_details/{jobId}") {
         fun createRoute(jobId: String) = "job_details/$jobId"
     }
-    object Apply       : Routes("apply/{jobId}") {
-        fun createRoute(jobId: String) = "apply/$jobId"
+    object Apply       : Routes("apply/{jobId}/{contractorId}") {
+        fun createRoute(jobId: String, contractorId: String) = "apply/$jobId/$contractorId"
     }
     object ActiveShift : Routes("active_shift/{jobId}") {
         fun createRoute(jobId: String) = "active_shift/$jobId"
@@ -35,11 +35,12 @@ sealed class Routes(val route: String) {
 
     // Messages tab
     object Messages : Routes("messages")
-    object Chat     : Routes("chat/{chatId}") {
-        fun createRoute(chatId: String) = "chat/$chatId"
+    object Chat     : Routes("chat/{conversationId}/{jobId}") {
+        fun createRoute(conversationId: String, jobId: String) = "chat/$conversationId/$jobId"
     }
 
     // Profile tab
+    object Notifications     : Routes("notifications")
     object Profile           : Routes("profile")
     object EditProfile       : Routes("edit_profile")
     object Settings          : Routes("settings")

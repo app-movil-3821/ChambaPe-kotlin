@@ -41,11 +41,13 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -67,13 +69,9 @@ fun SettingsScreen(
     onBack: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
-    // Estado funcional de cada preferencia.
-    var pushNotifications  by remember { mutableStateOf(true) }
-    var emailNotifications by remember { mutableStateOf(false) }
-    var nearbyShifts       by remember { mutableStateOf(true) }
-    var darkMode           by remember { mutableStateOf(false) }
+    val viewModel: SettingsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
 
-    var language           by remember { mutableStateOf("Español") }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showLogoutDialog   by remember { mutableStateOf(false) }
 
@@ -127,22 +125,22 @@ fun SettingsScreen(
                 ToggleRow(
                     icon    = Icons.Outlined.Notifications,
                     label   = "Notificaciones push",
-                    checked = pushNotifications,
-                    onCheckedChange = { pushNotifications = it }
+                    checked = uiState.pushNotifications,
+                    onCheckedChange = { viewModel.setPushNotifications(it) }
                 )
                 ThinDivider()
                 ToggleRow(
                     icon    = Icons.Outlined.Email,
                     label   = "Avisos por correo",
-                    checked = emailNotifications,
-                    onCheckedChange = { emailNotifications = it }
+                    checked = uiState.emailNotifications,
+                    onCheckedChange = { viewModel.setEmailNotifications(it) }
                 )
                 ThinDivider()
                 ToggleRow(
                     icon    = Icons.Outlined.WorkOutline,
                     label   = "Turnos cercanos a mí",
-                    checked = nearbyShifts,
-                    onCheckedChange = { nearbyShifts = it }
+                    checked = uiState.nearbyShifts,
+                    onCheckedChange = { viewModel.setNearbyShifts(it) }
                 )
             }
 
@@ -154,15 +152,15 @@ fun SettingsScreen(
                 ToggleRow(
                     icon    = Icons.Outlined.DarkMode,
                     label   = "Modo oscuro",
-                    checked = darkMode,
-                    onCheckedChange = { darkMode = it }
+                    checked = uiState.darkMode,
+                    onCheckedChange = { viewModel.setDarkMode(it) }
                 )
                 ThinDivider()
                 NavRow(
-                    icon  = Icons.Outlined.Language,
-                    label = "Idioma",
-                    trailing = language,
-                    onClick = { showLanguageDialog = true }
+                    icon     = Icons.Outlined.Language,
+                    label    = "Idioma",
+                    trailing = uiState.language,
+                    onClick  = { showLanguageDialog = true }
                 )
             }
 
@@ -217,7 +215,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    language = option
+                                    viewModel.setLanguage(option)
                                     showLanguageDialog = false
                                 }
                                 .padding(vertical = 12.dp),
@@ -226,8 +224,8 @@ fun SettingsScreen(
                             Text(
                                 text       = option,
                                 fontSize   = 15.sp,
-                                color      = if (option == language) ChambaBlue else TextPrimary,
-                                fontWeight = if (option == language) FontWeight.Bold else FontWeight.Normal
+                                color      = if (option == uiState.language) ChambaBlue else TextPrimary,
+                                fontWeight = if (option == uiState.language) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                     }
