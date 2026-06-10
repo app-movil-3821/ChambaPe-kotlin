@@ -154,6 +154,8 @@ fun LoginScreen(
                 colors          = OutlinedTextFieldDefaults.colors(
                     focusedTextColor     = Color(0xFF0D0D0D),
                     unfocusedTextColor   = Color(0xFF0D0D0D),
+                    focusedContainerColor   = Color.White,
+                    unfocusedContainerColor = Color.White,
                     focusedBorderColor   = ChambaPeBlue,
                     unfocusedBorderColor = Color(0xFFDDDDDD),
                     errorBorderColor     = ErrorRed
@@ -195,6 +197,8 @@ fun LoginScreen(
                 colors               = OutlinedTextFieldDefaults.colors(
                     focusedTextColor     = Color(0xFF0D0D0D),
                     unfocusedTextColor   = Color(0xFF0D0D0D),
+                    focusedContainerColor   = Color.White,
+                    unfocusedContainerColor = Color.White,
                     focusedBorderColor   = ChambaPeBlue,
                     unfocusedBorderColor = Color(0xFFDDDDDD),
                     errorBorderColor     = ErrorRed
