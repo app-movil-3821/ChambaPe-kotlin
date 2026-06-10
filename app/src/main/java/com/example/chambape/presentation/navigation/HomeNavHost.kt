@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.chambape.presentation.home.ActiveShiftScreen
 import com.example.chambape.presentation.home.ApplyScreen
+import com.example.chambape.presentation.home.CreateJobScreen
 import com.example.chambape.presentation.home.HomeFeedScreen
 import com.example.chambape.presentation.home.JobDetailsScreen
 import com.example.chambape.presentation.shifts.HelpScreen
@@ -25,6 +26,9 @@ fun HomeNavHost(
             HomeFeedScreen(
                 onJobClick = { jobId ->
                     navController.navigate(Routes.JobDetails.createRoute(jobId))
+                },
+                onNavigateToCreateJob = {
+                    navController.navigate(Routes.CreateJob.route)
                 }
             )
         }
@@ -86,6 +90,13 @@ fun HomeNavHost(
             HelpScreen(
                 onBack        = { navController.popBackStack() },
                 onSendMessage = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.CreateJob.route) {
+            CreateJobScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = { navController.popBackStack() }
             )
         }
     }

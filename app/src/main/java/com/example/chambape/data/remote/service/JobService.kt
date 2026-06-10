@@ -1,7 +1,10 @@
 package com.example.chambape.data.remote.service
 
+import com.example.chambape.data.remote.dto.CreateJobRequest
 import com.example.chambape.data.remote.dto.JobDto
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -24,4 +27,7 @@ interface JobService {
         @Query("district")  district: String? = null,
         @Query("minPayment") minPayment: Double? = null
     ): List<JobDto>
+
+    @POST("jobs")
+    suspend fun createJob(@Body body: CreateJobRequest): JobDto
 }

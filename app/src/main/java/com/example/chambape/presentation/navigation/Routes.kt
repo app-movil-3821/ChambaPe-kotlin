@@ -26,6 +26,8 @@ sealed class Routes(val route: String) {
     }
     object Help : Routes("help")
 
+    object CreateJob : Routes("create_job")
+
     // Shifts tab
     object MyShifts            : Routes("my_shifts")
     object MyShiftsFromProfile : Routes("my_shifts_from_profile")  // ← desde Profile

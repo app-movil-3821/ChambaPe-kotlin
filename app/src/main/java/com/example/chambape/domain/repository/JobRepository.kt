@@ -1,5 +1,6 @@
 package com.example.chambape.domain.repository
 
+import com.example.chambape.data.remote.dto.CreateJobRequest
 import com.example.chambape.domain.model.Job
 
 interface JobRepository {
@@ -11,4 +12,6 @@ interface JobRepository {
         longitude: Double,
         radiusKm: Double
     ): Result<List<Job>>
+
+    suspend fun createJob(request: CreateJobRequest): Job
 }
