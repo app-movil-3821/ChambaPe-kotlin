@@ -1,7 +1,9 @@
 package com.example.chambape.presentation.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,21 +18,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -53,38 +55,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-// NUEVAS IMPORTACIONES PARA EL MAPA
+// IMPORTACIONES DE GOOGLE MAPS
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
-private val BackgroundGray  = Color(0xFFF7F8FC)
+private val BackgroundGray  = Color(0xFFF8FAFC)
 private val ChambaPeBlue    = Color(0xFF0B57D0)
-private val TextPrimary     = Color(0xFF1D1B20)
-private val TextSecondary   = Color(0xFF49454F)
+private val TextPrimary     = Color(0xFF1E293B)
+private val TextSecondary   = Color(0xFF64748B)
 
 private fun statusLabel(status: String) = when (status.uppercase()) {
-    "PUBLISHED"   -> "● Disponible"
-    "IN_PROGRESS" -> "● En progreso"
-    "CLOSED"      -> "● Cerrado"
-    else          -> "● $status"
+    "PUBLISHED"   -> "Available"
+    "URGENT"      -> "Urgent"
+    else          -> "Available"
 }
 
 private fun statusBackgroundColor(status: String) = when (status.uppercase()) {
-    "PUBLISHED"   -> Color(0xFFE8F5E9)
-    "IN_PROGRESS" -> Color(0xFFE3F2FD)
-    "CLOSED"      -> Color(0xFFFFEEEE)
-    else          -> Color(0xFFF5F5F5)
+    "PUBLISHED"   -> Color(0xFFDCFCE7)
+    "URGENT"      -> Color(0xFFFFE4E6)
+    else          -> Color(0xFFDCFCE7)
 }
 
 private fun statusTextColor(status: String) = when (status.uppercase()) {
-    "PUBLISHED"   -> Color(0xFF43A047)
-    "IN_PROGRESS" -> Color(0xFF1E88E5)
-    "CLOSED"      -> Color(0xFFE53935)
-    else          -> Color(0xFF757575)
+    "PUBLISHED"   -> Color(0xFF15803D)
+    "URGENT"      -> Color(0xFFB91C1C)
+    else          -> Color(0xFF15803D)
 }
 
 @Composable
@@ -97,44 +97,18 @@ fun HomeFeedScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val userName     by viewModel.userName.collectAsState()
     val searchQuery  by viewModel.searchQuery.collectAsState()
+    val categorySelected by viewModel.selectedCategory.collectAsState()
 
-    // 1. NUEVO: Estado para alternar entre ver la lista o ver el mapa
-    var verMapa by remember { mutableStateOf(false) }
+    var verMapa      by remember { mutableStateOf(false) }
+    val limaCentro   = LatLng(-12.046374, -77.042793)
 
-    // 2. NUEVO: Configuración de cámara para el mapa centrado en Lima
-    val limaCentro = LatLng(-12.046374, -77.042793)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(limaCentro, 13f)
     }
 
-    // 3. NUEVO: Envolvemos todo en un Scaffold para soportar el Botón Flotante de forma limpia
-    Scaffold(
-        containerColor = BackgroundGray,
-        floatingActionButton = {
-            // Solo mostramos el FAB si no está cargando, no hay errores y la lista no está vacía
-            if (!isLoading && errorMessage == null && jobs.isNotEmpty()) {
-                ExtendedFloatingActionButton(
-                    onClick = { verMapa = !verMapa },
-                    icon = {
-                        Icon(
-                            imageVector = if (verMapa) Icons.Filled.List else Icons.Filled.Map,
-                            contentDescription = null
-                        )
-                    },
-                    text = { Text(text = if (verMapa) "Ver Lista" else "Ver Mapa") },
-                    containerColor = ChambaPeBlue,
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(50.dp),
-                    modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
-                )
-            }
-        }
-    ) { paddingValues ->
-
+    Scaffold(containerColor = BackgroundGray) { paddingValues ->
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
             color    = BackgroundGray
         ) {
             when {
@@ -145,223 +119,241 @@ fun HomeFeedScreen(
                 }
 
                 errorMessage != null -> {
-                    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text      = errorMessage!!,
-                                fontSize  = 15.sp,
-                                color     = Color(0xFFD93025),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                            Text(text = errorMessage!!, fontSize = 15.sp, color = Color(0xFFD93025))
                             Spacer(Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.loadJobs() },
-                                colors  = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue),
-                                shape   = RoundedCornerShape(10.dp)
-                            ) {
+                            Button(onClick = { viewModel.loadJobs() }, colors = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue)) {
                                 Text("Reintentar", color = Color.White)
                             }
                         }
                     }
                 }
 
-                jobs.isEmpty() -> {
-                    val isFiltering = searchQuery.isNotBlank()
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Outlined.WorkOutline,
-                                contentDescription = null,
-                                tint     = Color(0xFFCCCCCC),
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Spacer(Modifier.height(16.dp))
-                            Text(
-                                text     = if (isFiltering) "Sin resultados para \"$searchQuery\"."
-                                else "No hay trabajos disponibles.",
-                                fontSize = 15.sp,
-                                color    = TextSecondary,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 32.dp)
-                            )
-                            if (!isFiltering) {
-                                Spacer(Modifier.height(12.dp))
-                                Button(
-                                    onClick = { viewModel.loadJobs() },
-                                    colors  = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue),
-                                    shape   = RoundedCornerShape(10.dp)
-                                ) {
-                                    Text("Actualizar", color = Color.White)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // SI TODO ESTÁ CORRECTO: Renderizamos la UI Principal
                 else -> {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxSize()) {
 
-                        // CABECERA ESTÁTICA (Saludo + Input de Búsqueda)
-                        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)) {
-                            Text(
-                                text       = if (userName.isNotBlank()) "¡Hola, $userName! 👋" else "¡Hola!",
-                                fontSize   = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color      = TextPrimary,
-                                modifier   = Modifier.padding(bottom = 4.dp)
-                            )
-                            Text(
-                                text     = "Estos son los trabajos disponibles",
-                                fontSize = 14.sp,
-                                color    = TextSecondary,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-                            OutlinedTextField(
-                                value         = searchQuery,
-                                onValueChange = { viewModel.onSearchQueryChange(it) },
-                                modifier      = Modifier.fillMaxWidth(),
-                                placeholder   = { Text("Buscar por título, categoría o distrito…", fontSize = 14.sp) },
-                                leadingIcon   = { Icon(Icons.Outlined.Search, contentDescription = null, tint = TextSecondary) },
-                                trailingIcon  = {
-                                    if (searchQuery.isNotBlank()) {
-                                        IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                                            Icon(Icons.Outlined.Close, contentDescription = "Limpiar", tint = TextSecondary)
-                                        }
-                                    }
-                                },
-                                singleLine    = true,
-                                shape         = RoundedCornerShape(14.dp),
-                                colors        = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor     = TextPrimary,
-                                    unfocusedTextColor   = TextPrimary,
-                                    focusedContainerColor   = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    focusedBorderColor   = ChambaPeBlue,
-                                    unfocusedBorderColor = Color(0xFFDDDDDD)
-                                )
-                            )
-                        }
-
-                        // CONDICIONAL: ¿Mostramos Mapa o la Lista tradicional?
                         if (verMapa) {
-                            // VISTA DE MAPA COMPLETO
-                            GoogleMap(
-                                modifier = Modifier.fillMaxSize(),
-                                cameraPositionState = cameraPositionState
-                            ) {
-                                // Pintamos los pines reales con la data de tu backend (jobs)
-                                jobs.forEach { job ->
+                            // ─── VISTA 1: MAPA EN PANTALLA COMPLETA (Mantiene tu regla de UX) ───
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                GoogleMap(
+                                    modifier = Modifier.fillMaxSize(),
+                                    cameraPositionState = cameraPositionState
+                                ) {
+                                    jobs.forEach { job ->
+                                        val coordenadasSimuladas = LatLng(
+                                            -12.046374 + (job.id.hashCode() % 100 * 0.0005),
+                                            -77.042793 + (job.id.hashCode() % 100 * 0.0005)
+                                        )
+                                        Marker(
+                                            state = MarkerState(position = coordenadasSimuladas),
+                                            title = job.title,
+                                            snippet = "S/ ${job.paymentAmount}"
+                                        )
+                                    }
+                                }
 
-                                    val coordenadasSimuladas = LatLng(
-                                        -12.046374 + (job.id.hashCode() % 100 * 0.0005),
-                                        -77.042793 + (job.id.hashCode() % 100 * 0.0005)
-                                    )
-
-                                    Marker(
-                                        state = MarkerState(position = coordenadasSimuladas),
-                                        title = job.title,
-                                        snippet = "${job.district} - S/ ${job.paymentAmount}",
-                                        onClick = {
-                                            onJobClick(job.id) // Navega al detalle del trabajo al tocar el pin
-                                            true
-                                        }
-                                    )
+                                IconButton(
+                                    onClick = { verMapa = false },
+                                    modifier = Modifier
+                                        .padding(start = 16.dp, top = 32.dp)
+                                        .background(Color.White, shape = RoundedCornerShape(50.dp))
+                                        .size(44.dp)
+                                ) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = TextPrimary)
                                 }
                             }
                         } else {
-                            // VISTA DE LISTA VERTICAL
-                            LazyColumn(
-                                contentPadding      = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                modifier            = Modifier.fillMaxSize()
-                            ) {
-                                items(jobs) { job ->
-                                    Card(
-                                        modifier  = Modifier.fillMaxWidth(),
-                                        shape     = RoundedCornerShape(16.dp),
-                                        colors    = CardDefaults.cardColors(containerColor = Color.White),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            // ─── VISTA 2: HOME FEED ESTILO FIGMA ───
+                            Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+
+                                // Cabecera fija (Saludo + Subtítulo de Figma)
+                                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)) {
+                                    Text(
+                                        text       = if (userName.isNotBlank()) "¡Hola, $userName!" else "¡Hola, Diego!",
+                                        fontSize   = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color      = TextPrimary
+                                    )
+                                    Text(
+                                        text     = "Encuentra tu próximo turno al instante.",
+                                        fontSize = 14.sp,
+                                        color    = TextSecondary,
+                                        modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
+                                    )
+
+                                    // Buscador Estilo Figma
+                                    OutlinedTextField(
+                                        value         = searchQuery,
+                                        onValueChange = { viewModel.onSearchQueryChange(it) },
+                                        modifier      = Modifier.fillMaxWidth(),
+                                        placeholder   = { Text("Buscar turnos...", fontSize = 14.sp, color = Color(0xFF94A3B8)) },
+                                        leadingIcon   = { Icon(Icons.Outlined.Search, null, tint = Color(0xFF94A3B8)) },
+                                        trailingIcon  = {
+                                            if (searchQuery.isNotBlank()) {
+                                                IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                                    Icon(Icons.Outlined.Close, null, tint = TextSecondary)
+                                                }
+                                            }
+                                        },
+                                        singleLine    = true,
+                                        shape         = RoundedCornerShape(12.dp),
+                                        colors        = OutlinedTextFieldDefaults.colors(
+                                            focusedContainerColor = Color.White,
+                                            unfocusedContainerColor = Color.White,
+                                            focusedBorderColor = ChambaPeBlue,
+                                            unfocusedBorderColor = Color(0xEFE0E0E0)
+                                        )
+                                    )
+
+                                    Spacer(Modifier.height(14.dp))
+
+                                    // Fila de Categorías Horizontales (Figma)
+                                    Row(
+                                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Column(modifier = Modifier.padding(16.dp)) {
-                                            Row(
-                                                modifier              = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment     = Alignment.Top
-                                            ) {
-                                                Text(
-                                                    text       = job.title,
-                                                    fontSize   = 18.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color      = TextPrimary,
-                                                    modifier   = Modifier.weight(1f)
-                                                )
-                                                Icon(
-                                                    imageVector        = Icons.Outlined.FavoriteBorder,
-                                                    contentDescription = "Guardar",
-                                                    tint               = TextSecondary,
-                                                    modifier           = Modifier
-                                                        .padding(start = 8.dp)
-                                                        .clickable { }
-                                                )
+                                        CategoryChip(
+                                            text = "💼 Todos",
+                                            isSelected = categorySelected == "TODOS",
+                                            onChipClick = { viewModel.onCategoryChange("TODOS") }
+                                        )
+                                        CategoryChip(
+                                            text = "📍 Cerca",
+                                            isSelected = categorySelected == "CERCA",
+                                            onChipClick = {
+                                                viewModel.onCategoryChange("CERCA")
+                                                verMapa = true // Al tocar cerca, abre el mapa directamente
                                             }
+                                        )
+                                        CategoryChip(
+                                            text = "⚡ Urgente",
+                                            isSelected = categorySelected == "URGENTE",
+                                            onChipClick = { viewModel.onCategoryChange("URGENTE") }
+                                        )
+                                        CategoryChip(
+                                            text = "🕒 Hoy",
+                                            isSelected = categorySelected == "HOY",
+                                            onChipClick = { viewModel.onCategoryChange("HOY") }
+                                        )
+                                    }
+                                }
 
-                                            Spacer(Modifier.height(8.dp))
+                                // Contenido Scrolleable (Mapa estático + Tarjetas)
+                                LazyColumn(
+                                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
 
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector        = Icons.Outlined.LocationOn,
-                                                    contentDescription = null,
-                                                    tint               = TextSecondary,
-                                                    modifier           = Modifier.size(16.dp)
-                                                )
-                                                Spacer(Modifier.width(4.dp))
-                                                Text(
-                                                    text     = job.district,
-                                                    fontSize = 14.sp,
-                                                    color    = TextSecondary
-                                                )
-                                                Spacer(Modifier.width(16.dp))
-                                                Text(
-                                                    text       = "S/ ${job.paymentAmount}",
-                                                    fontSize   = 14.sp,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color      = TextPrimary
-                                                )
-                                            }
-
-                                            Spacer(Modifier.height(16.dp))
-
-                                            Row(
-                                                modifier              = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment     = Alignment.CenterVertically) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(50.dp))
-                                                        .background(statusBackgroundColor(job.status))
-                                                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                                                ) {
-                                                    Text(
-                                                        text       = statusLabel(job.status),
-                                                        fontSize   = 12.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color      = statusTextColor(job.status)
+                                    // Componente del mapa estático "Preview" de Figma
+                                    item {
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(140.dp)
+                                                .clickable { verMapa = true },
+                                            shape = RoundedCornerShape(16.dp),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize().clickable{verMapa = true}) {
+                                                // Un GoogleMap real pero con controles desactivados actúa como preview estático
+                                                GoogleMap(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    cameraPositionState = rememberCameraPositionState {
+                                                        position = CameraPosition.fromLatLngZoom(limaCentro, 12f)
+                                                    },
+                                                    uiSettings = MapUiSettings(
+                                                        zoomControlsEnabled = false,
+                                                        scrollGesturesEnabled = false,
+                                                        zoomGesturesEnabled = false
                                                     )
+                                                )
+
+                                                // Botón flotante blanco sobre el preview
+                                                Row(
+                                                    modifier = Modifier
+                                                        .padding(12.dp)
+                                                        .align(Alignment.BottomStart)
+                                                        .background(Color.White, shape = RoundedCornerShape(50.dp))
+                                                        .clickable { verMapa = true}
+                                                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(Icons.Filled.Map, null, tint = ChambaPeBlue, modifier = Modifier.size(16.dp))
+                                                    Spacer(Modifier.width(6.dp))
+                                                    Text("Ver en mapa", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = ChambaPeBlue)
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text("Turnos disponibles", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                            Text("Ver todos", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = ChambaPeBlue, modifier = Modifier.clickable {})
+                                        }
+                                    }
+
+                                    // Lista de Tarjetas Estilo Figma
+                                    items(jobs) { job ->
+                                        Card(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                                            border = BorderStroke(1.dp, Color(0xFFF1F5F9))
+                                        ) {
+                                            Column(modifier = Modifier.padding(16.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(text = job.title, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                                        Spacer(Modifier.height(4.dp))
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Icon(Icons.Outlined.Storefront, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                                                            Spacer(Modifier.width(4.dp))
+                                                            Text(text = job.district, fontSize = 13.sp, color = TextSecondary)
+                                                        }
+                                                    }
+                                                    Column(horizontalAlignment = Alignment.End) {
+                                                        Text(text = "S/ ${job.paymentAmount}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ChambaPeBlue)
+                                                        Text(text = "📍 0.5km", fontSize = 11.sp, color = TextSecondary, modifier = Modifier.padding(top = 2.dp))
+                                                    }
                                                 }
 
-                                                Button(
-                                                    onClick        = { onJobClick(job.id) },
-                                                    shape          = RoundedCornerShape(10.dp),
-                                                    colors         = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue),
-                                                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
+                                                Spacer(Modifier.height(14.dp))
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Text(
-                                                        text       = "Aplicar",
-                                                        fontSize   = 14.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color      = Color.White
-                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(statusBackgroundColor(job.status))
+                                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                                    ) {
+                                                        Text(text = statusLabel(job.status), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = statusTextColor(job.status))
+                                                    }
+
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(Icons.Outlined.FavoriteBorder, null, tint = TextSecondary, modifier = Modifier.size(20.dp).clickable {})
+                                                        Spacer(Modifier.width(16.dp))
+                                                        Button(
+                                                            onClick = { onJobClick(job.id) },
+                                                            shape = RoundedCornerShape(8.dp),
+                                                            colors = ButtonDefaults.buttonColors(containerColor = ChambaPeBlue),
+                                                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                                                        ) {
+                                                            Text("Aplicar", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -373,5 +365,24 @@ fun HomeFeedScreen(
                 }
             }
         }
+    }
+}
+
+// Componente Reutilizable para los Chips de Figma
+@Composable
+fun CategoryChip(text: String, isSelected: Boolean, onChipClick: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(50.dp),
+        color = if (isSelected) ChambaPeBlue else Color.White,
+        border = if (isSelected) null else BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = Modifier.clickable { onChipClick() }
+    ) {
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (isSelected) Color.White else TextPrimary,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        )
     }
 }
