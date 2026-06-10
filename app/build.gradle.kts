@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.ksp)
+    // 1. Agrega esta línea para activar el plugin que lee tu local.properties
+    alias(libs.plugins.maps.secrets)
 }
 
 android {
@@ -52,7 +54,7 @@ dependencies {
     // OkHttp + Retrofit
     implementation(libs.okhttp.logging)
     implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)     // ← quita esta
+    implementation(libs.retrofit.converter.gson)
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -69,6 +71,11 @@ dependencies {
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
+
+    // 2. AGREGA AQUÍ LAS LIBRERÍAS DE MAPAS Y GPS DESDE EL CATÁLOGO
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
