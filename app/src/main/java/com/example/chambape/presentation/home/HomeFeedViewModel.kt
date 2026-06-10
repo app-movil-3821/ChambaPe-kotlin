@@ -6,6 +6,7 @@ import com.example.chambape.di.AppModule
 import com.example.chambape.domain.model.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,15 +23,29 @@ class HomeFeedViewModel : ViewModel() {
     private val _searchQuery  = MutableStateFlow("")
     val searchQuery: StateFlow<String> get() = _searchQuery
 
-    val jobs: StateFlow<List<Job>> = combine(_allJobs, _searchQuery) { jobs, query ->
-        if (query.isBlank()) jobs
-        else {
-            val q = query.trim().lowercase()
-            jobs.filter {
-                it.title.lowercase().contains(q)    ||
-                it.category.lowercase().contains(q) ||
-                it.district.lowercase().contains(q)
+    private val _selectedCategory = MutableStateFlow("TODOS")
+    val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
+
+    // ─── LÓGICA DE FILTRADO COMBINADA Y REACTIVA ───
+    val jobs: StateFlow<List<Job>> = combine(_allJobs, _searchQuery, _selectedCategory) { rawJobs, query, category ->
+        rawJobs.filter { job ->
+            // 1. Filtro por barra de búsqueda (Título, Categoría o Distrito)
+            val matchesSearch = if (query.isBlank()) true else {
+                val q = query.trim().lowercase()
+                job.title.lowercase().contains(q)    ||
+                        job.category.lowercase().contains(q) ||
+                        job.district.lowercase().contains(q)
             }
+
+            // 2. Filtro por Chips horizontales de Figma
+            val matchesCategory = when (category) {
+                "URGENTE" -> job.status.uppercase() == "URGENT" || job.status.uppercase() == "IN_PROGRESS"
+                "HOY"     -> job.status.uppercase() == "PUBLISHED"
+                else      -> true // "TODOS" o "CERCA" despliegan la lista completa por defecto
+            }
+
+            // El trabajo debe cumplir ambas condiciones para mostrarse
+            matchesSearch && matchesCategory
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -61,6 +76,11 @@ class HomeFeedViewModel : ViewModel() {
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
+    }
+
+    // Nueva función para actualizar la categoría desde el click de la UI
+    fun onCategoryChange(category: String) {
+        _selectedCategory.value = category
     }
 
     private fun loadUserName() {
