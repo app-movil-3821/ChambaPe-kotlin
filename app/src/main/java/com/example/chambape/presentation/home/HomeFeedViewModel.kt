@@ -26,6 +26,9 @@ class HomeFeedViewModel : ViewModel() {
     private val _selectedCategory = MutableStateFlow("TODOS")
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
 
+    private val _userRole = MutableStateFlow("")
+    val userRole: StateFlow<String> = _userRole.asStateFlow()
+
     // ─── LÓGICA DE FILTRADO COMBINADA Y REACTIVA ───
     val jobs: StateFlow<List<Job>> = combine(_allJobs, _searchQuery, _selectedCategory) { rawJobs, query, category ->
         rawJobs.filter { job ->
@@ -60,6 +63,7 @@ class HomeFeedViewModel : ViewModel() {
 
     init {
         loadUserName()
+        loadUserRole()
         loadJobs()
     }
 
@@ -90,4 +94,15 @@ class HomeFeedViewModel : ViewModel() {
                 .onSuccess { _userName.value = it.name.split(" ").firstOrNull() ?: it.name }
         }
     }
+    private fun loadUserRole() {
+        val userId = tokenManager.getUserId() ?: return
+        viewModelScope.launch {
+            authRepository.getUser(userId)
+                .onSuccess {
+                    // Guardamos el rol en mayúsculas para evitar problemas de formato
+                    _userRole.value = it.role.uppercase()
+                }
+        }
+    }
+
 }

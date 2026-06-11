@@ -90,7 +90,8 @@ private fun statusTextColor(status: String) = when (status.uppercase()) {
 @Composable
 fun HomeFeedScreen(
     viewModel: HomeFeedViewModel = viewModel(),
-    onJobClick: (jobId: String) -> Unit
+    onJobClick: (jobId: String) -> Unit,
+    onNavigateToCreateJob: () -> Unit
 ) {
     val jobs         by viewModel.jobs.collectAsState()
     val isLoading    by viewModel.isLoading.collectAsState()
@@ -98,6 +99,7 @@ fun HomeFeedScreen(
     val userName     by viewModel.userName.collectAsState()
     val searchQuery  by viewModel.searchQuery.collectAsState()
     val categorySelected by viewModel.selectedCategory.collectAsState()
+    val userRole by viewModel.userRole.collectAsState()
 
     var verMapa      by remember { mutableStateOf(false) }
     val limaCentro   = LatLng(-12.046374, -77.042793)
@@ -358,6 +360,31 @@ fun HomeFeedScreen(
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+                        // ───  BOTÓN FLOTANTE INTELIGENTE EXCLUSIVO PARA EL CONTRATANTE ───
+                        // Al estar suelto al final del Box externo, se pintará flotando sobre el feed o el mapa
+                        if (userRole == "CONTRATANTE" && !verMapa) {
+                            androidx.compose.material3.FloatingActionButton(
+                                onClick = { onNavigateToCreateJob() },
+                                containerColor = ChambaPeBlue,
+                                contentColor = Color.White,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(bottom = 24.dp, end = 24.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Outlined.WorkOutline,
+                                        contentDescription = "Publicar Empleo",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(text = "Publicar Chamba", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

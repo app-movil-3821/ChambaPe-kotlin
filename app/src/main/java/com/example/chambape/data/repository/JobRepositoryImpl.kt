@@ -48,4 +48,8 @@ class JobRepositoryImpl(
             Result.failure(e)
         }
     }
+    override suspend fun createJob(request: com.example.chambape.data.remote.dto.CreateJobRequest): com.example.chambape.domain.model.Job {
+        // Llama a tu Retrofit (jobService) y usa tu mapper para transformarlo al modelo de dominio
+        return jobService.createJob(request).toDomain()
+    }
 }
