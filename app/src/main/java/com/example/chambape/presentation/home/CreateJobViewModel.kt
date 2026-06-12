@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.chambape.data.remote.dto.CreateJobRequest
 import com.example.chambape.data.repository.TokenManager
+import com.example.chambape.data.location.GeocodingService
 import com.example.chambape.domain.repository.JobRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,23 +23,46 @@ sealed class CreateJobUiState {
 
 class CreateJobViewModel(
     private val jobRepository: JobRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val geocodingService: GeocodingService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CreateJobUiState>(CreateJobUiState.Idle)
     val uiState: StateFlow<CreateJobUiState> = _uiState.asStateFlow()
+
+    /**
+     * Convierte un punto elegido en el mapa en campos de dirección,
+     * para autocompletar el formulario. La pantalla llama esto al confirmar el pin.
+     */
+    suspend fun resolveAddress(
+        latitude: Double,
+        longitude: Double
+    ): com.example.chambape.data.location.ReverseGeoResult? =
+        geocodingService.reverseGeocode(latitude, longitude)
 
     fun publishJob(
         title: String,
         description: String,
         category: String,
         payment: String,
-        district: String
+        departamento: String,
+        provincia: String,
+        distrito: String,
+        direccion: String
     ) {
         val contractorId = tokenManager.getUserId() ?: return
 
         viewModelScope.launch {
             _uiState.value = CreateJobUiState.Loading
+
+            // Convertimos la dirección escrita en coordenadas reales.
+            val geo = geocodingService.geocode(departamento, provincia, distrito, direccion)
+            if (geo == null) {
+                _uiState.value = CreateJobUiState.Error(
+                    "No pudimos ubicar esa dirección. Revisa el distrito y la dirección."
+                )
+                return@launch
+            }
 
             // Formateador clásico y seguro para las fechas
             val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.getDefault())
@@ -56,10 +80,10 @@ class CreateJobViewModel(
                 description = description,
                 category = category,
                 paymentAmount = payment.toDoubleOrNull() ?: 0.0,
-                latitude = -12.046374,
-                longitude = -77.042793,
-                address = "Dirección por definir",
-                district = district,
+                latitude = geo.latitude,
+                longitude = geo.longitude,
+                address = geo.formattedAddress,
+                district = distrito,
                 scheduledStart = start,
                 scheduledEnd = end
             )
@@ -69,7 +93,7 @@ class CreateJobViewModel(
 
                 _uiState.value = CreateJobUiState.Success
             } catch (e: Exception) {
-                println("🚨 ERROR REAL AL CREAR TRABAJO: ${e.localizedMessage}")
+                println(" ERROR REAL AL CREAR TRABAJO: ${e.localizedMessage}")
                 _uiState.value = CreateJobUiState.Error(e.localizedMessage ?: "Error desconocido al publicar")
             }
         }
@@ -81,9 +105,10 @@ class CreateJobViewModel(
 // Factory para la inyección de dependencias manual
 class CreateJobViewModelFactory(
     private val jobRepository: JobRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val geocodingService: GeocodingService
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return CreateJobViewModel(jobRepository, tokenManager) as T
+        return CreateJobViewModel(jobRepository, tokenManager, geocodingService) as T
     }
 }

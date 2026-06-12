@@ -8,6 +8,7 @@ import com.example.chambape.domain.repository.NotificationRepository
 import com.example.chambape.domain.repository.ShiftRepository
 import com.example.chambape.data.repository.SettingsPreferences
 import com.example.chambape.data.repository.TokenManager
+import com.example.chambape.data.location.GeocodingService
 
 /**
  * Objeto singleton que inicializa y provee todas las dependencias.
@@ -22,6 +23,7 @@ object AppModule {
     private lateinit var _notificationRepository: NotificationRepository
     private lateinit var _tokenManager: TokenManager
     private lateinit var _settingsPreferences: SettingsPreferences
+    private lateinit var _geocodingService: GeocodingService
 
     val authRepository: AuthRepository                 get() = _authRepository
     val jobRepository: JobRepository                   get() = _jobRepository
@@ -30,11 +32,13 @@ object AppModule {
     val notificationRepository: NotificationRepository get() = _notificationRepository
     val tokenManager: TokenManager                     get() = _tokenManager
     val settingsPreferences: SettingsPreferences       get() = _settingsPreferences
+    val geocodingService: GeocodingService             get() = _geocodingService
 
     fun init(context: Context) {
         val tm                   = TokenManager(context)
         _tokenManager            = tm
         _settingsPreferences     = SettingsPreferences(context)
+        _geocodingService        = GeocodingService(context)
         val okHttpClient         = RemoteModule.provideOkHttpClient(tm)
         val retrofit             = RemoteModule.provideRetrofit(okHttpClient)
 

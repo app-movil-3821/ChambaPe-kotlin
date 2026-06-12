@@ -143,15 +143,16 @@ fun HomeFeedScreen(
                                     cameraPositionState = cameraPositionState
                                 ) {
                                     jobs.forEach { job ->
-                                        val coordenadasSimuladas = LatLng(
-                                            -12.046374 + (job.id.hashCode() % 100 * 0.0005),
-                                            -77.042793 + (job.id.hashCode() % 100 * 0.0005)
-                                        )
-                                        Marker(
-                                            state = MarkerState(position = coordenadasSimuladas),
-                                            title = job.title,
-                                            snippet = "S/ ${job.paymentAmount}"
-                                        )
+                                        // Saltamos jobs sin ubicación real (datos antiguos en 0.0/0.0)
+                                        if (job.latitude != 0.0 || job.longitude != 0.0) {
+                                            Marker(
+                                                state = MarkerState(
+                                                    position = LatLng(job.latitude, job.longitude)
+                                                ),
+                                                title = job.title,
+                                                snippet = "S/ ${job.paymentAmount}"
+                                            )
+                                        }
                                     }
                                 }
 
@@ -363,31 +364,7 @@ fun HomeFeedScreen(
                                 }
                             }
                         }
-                        // ───  BOTÓN FLOTANTE INTELIGENTE EXCLUSIVO PARA EL CONTRATANTE ───
-                        // Al estar suelto al final del Box externo, se pintará flotando sobre el feed o el mapa
-                        if (userRole == "CONTRATANTE" && !verMapa) {
-                            androidx.compose.material3.FloatingActionButton(
-                                onClick = { onNavigateToCreateJob() },
-                                containerColor = ChambaPeBlue,
-                                contentColor = Color.White,
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(bottom = 24.dp, end = 24.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = androidx.compose.material.icons.Icons.Outlined.WorkOutline,
-                                        contentDescription = "Publicar Empleo",
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(text = "Publicar Chamba", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
+                        // El botón "Publicar Chamba" se movió a la pestaña "Jobs" (vista de contratante).
                     }
                 }
             }

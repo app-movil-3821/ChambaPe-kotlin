@@ -3,6 +3,7 @@ package com.example.chambape.data.repository
 import com.example.chambape.data.mapper.toDomain
 import com.example.chambape.data.remote.service.JobService
 import com.example.chambape.domain.model.Job
+import com.example.chambape.domain.repository.JobAction
 import com.example.chambape.domain.repository.JobRepository
 
 class JobRepositoryImpl(
@@ -31,6 +32,31 @@ class JobRepositoryImpl(
         return try {
             val jobs = jobService.getPublishedJobs().map { it.toDomain() }
             Result.success(jobs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getJobsByContractor(contractorId: String): Result<List<Job>> {
+        return try {
+            val jobs = jobService.getJobsByContractor(contractorId).map { it.toDomain() }
+            Result.success(jobs)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun changeJobStatus(jobId: String, action: JobAction): Result<Job> {
+        return try {
+            val dto = when (action) {
+                JobAction.PUBLISH  -> jobService.publishJob(jobId)
+                JobAction.START    -> jobService.startJob(jobId)
+                JobAction.COMPLETE -> jobService.completeJob(jobId)
+                JobAction.CANCEL   -> jobService.cancelJob(jobId)
+                JobAction.CLOSE    -> jobService.closeJob(jobId)
+                JobAction.REOPEN   -> jobService.reopenJob(jobId)
+            }
+            Result.success(dto.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }
