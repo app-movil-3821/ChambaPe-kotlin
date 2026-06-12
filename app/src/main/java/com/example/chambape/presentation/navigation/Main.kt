@@ -7,8 +7,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -18,7 +20,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.chambape.di.AppModule
 import com.example.chambape.presentation.auth.SkillsScreen
+import com.example.chambape.presentation.home.CreateJobScreen
+import com.example.chambape.presentation.home.MyJobsScreen
 import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
 import com.example.chambape.presentation.notifications.NotificationsScreen
@@ -33,8 +38,14 @@ import com.example.chambape.presentation.shifts.ShiftSummaryScreen
 fun MainScreen() {
     val navController = rememberNavController()
 
+    val mainViewModel: MainViewModel = viewModel(
+        factory = MainViewModelFactory(AppModule.authRepository, AppModule.tokenManager)
+    )
+    val userRole by mainViewModel.userRole.collectAsState()
+    val isContratante = userRole == "CONTRATANTE"
+
     Scaffold(
-        bottomBar = { ChambaPeBottomBar(navController) }
+        bottomBar = { ChambaPeBottomBar(navController, isContratante) }
     ) { innerPadding ->
         NavHost(
             navController    = navController,
@@ -50,13 +61,28 @@ fun MainScreen() {
                 )
             }
 
-            // Tab: Shifts
+            // Tab: Shifts (chambeador) / Jobs (contratante)
             composable(Routes.MyShifts.route) {
-                MyShiftsScreen(
-                    onShiftClick         = { shiftId ->
-                        navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
-                    },
-                    onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
+                if (isContratante) {
+                    MyJobsScreen(
+                        onNavigateToCreateJob = { navController.navigate(Routes.CreateJob.route) },
+                        onNotificationsClick  = { navController.navigate(Routes.Notifications.route) }
+                    )
+                } else {
+                    MyShiftsScreen(
+                        onShiftClick         = { shiftId ->
+                            navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
+                        },
+                        onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
+                    )
+                }
+            }
+
+            // Crear chamba (accesible desde la pestaña Jobs del contratante)
+            composable(Routes.CreateJob.route) {
+                CreateJobScreen(
+                    onBack    = { navController.popBackStack() },
+                    onSuccess = { navController.popBackStack() }
                 )
             }
             composable(
@@ -157,12 +183,14 @@ fun MainScreen() {
 }
 
 @Composable
-private fun ChambaPeBottomBar(navController: NavHostController) {
+private fun ChambaPeBottomBar(navController: NavHostController, isContratante: Boolean) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDest   = backStackEntry?.destination
 
     NavigationBar {
         MainTab.entries.forEach { tab ->
+            // El contratante ve "Jobs" en lugar de "Shifts" en esa pestaña.
+            val label = if (tab == MainTab.SHIFTS && isContratante) "Jobs" else tab.label
             NavigationBarItem(
                 selected = currentDest?.hierarchy?.any { it.route == tab.route } == true,
                 onClick  = {
@@ -174,8 +202,8 @@ private fun ChambaPeBottomBar(navController: NavHostController) {
                         restoreState    = true
                     }
                 },
-                icon  = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
-                label = { Text(tab.label) }
+                icon  = { Icon(imageVector = tab.icon, contentDescription = label) },
+                label = { Text(label) }
             )
         }
     }
