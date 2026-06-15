@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.WorkOutline
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -46,12 +48,20 @@ fun MyJobsScreen(
     onNotificationsClick: (() -> Unit)? = null
 ) {
     val viewModel: MyJobsViewModel = viewModel(
-        factory = MyJobsViewModelFactory(AppModule.jobRepository, AppModule.tokenManager)
+        factory = MyJobsViewModelFactory(
+            AppModule.jobRepository,
+            AppModule.shiftRepository,
+            AppModule.authRepository,
+            AppModule.tokenManager
+        )
     )
     val jobs by viewModel.jobs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val actioningId by viewModel.actioningId.collectAsState()
+    val applicantsMap by viewModel.applicantsMap.collectAsState()
+    val expandedJobIds by viewModel.expandedJobIds.collectAsState()
+    val actioningEnrollmentId by viewModel.actioningEnrollmentId.collectAsState()
 
     // Chamba pendiente de confirmar cancelación (null = sin diálogo abierto)
     var pendingCancelId by remember { mutableStateOf<String?>(null) }
@@ -141,6 +151,13 @@ fun MyJobsScreen(
                             MyJobCard(
                                 job = job,
                                 isActioning = actioningId == job.id,
+                                isExpanded = job.id in expandedJobIds,
+                                applicants = applicantsMap[job.id],
+                                actioningEnrollmentId = actioningEnrollmentId,
+                                onToggleApplicants = { viewModel.toggleApplicants(job.id) },
+                                onEnrollmentAction = { enrollmentId, accept ->
+                                    viewModel.onEnrollmentAction(job.id, enrollmentId, accept)
+                                },
                                 onAction = { action ->
                                     if (action == JobAction.CANCEL) {
                                         pendingCancelId = job.id
@@ -179,6 +196,11 @@ fun MyJobsScreen(
 private fun MyJobCard(
     job: Job,
     isActioning: Boolean,
+    isExpanded: Boolean,
+    applicants: List<ApplicantUi>?,
+    actioningEnrollmentId: String?,
+    onToggleApplicants: () -> Unit,
+    onEnrollmentAction: (enrollmentId: String, accept: Boolean) -> Unit,
     onAction: (JobAction) -> Unit
 ) {
     val (statusLabel, statusColor, statusBg) = jobStatusStyle(job.status)
@@ -191,6 +213,7 @@ private fun MyJobCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(Modifier.padding(16.dp)) {
+            // ─── Encabezado: título + badge de estado ───
             Row(verticalAlignment = Alignment.Top) {
                 Text(
                     text = job.title,
@@ -221,6 +244,83 @@ private fun MyJobCard(
                 color = ChambaPeBlue
             )
 
+            // ─── Desplegable de postulantes (solo en estado PUBLISHED) ───
+            if (job.status == "PUBLISHED") {
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(color = Color(0xFFE2E8F0))
+                Spacer(Modifier.height(8.dp))
+
+                // Botón para abrir/cerrar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isExpanded) "Ocultar postulantes" else "Ver postulantes",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ChambaPeBlue
+                    )
+                    IconButton(
+                        onClick = onToggleApplicants,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded)
+                                androidx.compose.material.icons.Icons.Default.KeyboardArrowUp
+                            else
+                                androidx.compose.material.icons.Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = ChambaPeBlue
+                        )
+                    }
+                }
+
+                // Contenido del desplegable
+                if (isExpanded) {
+                    when {
+                        applicants == null -> {
+                            // Cargando
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = ChambaPeBlue
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("Cargando postulantes...", fontSize = 13.sp, color = TextSecondary)
+                            }
+                        }
+                        applicants.isEmpty() -> {
+                            Text(
+                                "Aún no hay postulantes para esta chamba.",
+                                fontSize = 13.sp,
+                                color = TextSecondary,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        else -> {
+                            Spacer(Modifier.height(4.dp))
+                            applicants.forEach { applicant ->
+                                ApplicantRow(
+                                    applicant = applicant,
+                                    isActioning = actioningEnrollmentId == applicant.enrollmentId,
+                                    onAccept = { onEnrollmentAction(applicant.enrollmentId, true) },
+                                    onReject = { onEnrollmentAction(applicant.enrollmentId, false) }
+                                )
+                                Spacer(Modifier.height(8.dp))
+                            }
+                        }
+                    }
+                }
+            }
+
             // ─── Acciones de gestión válidas para el estado actual ───
             if (actions.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
@@ -250,6 +350,66 @@ private fun MyJobCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ApplicantRow(
+    applicant: ApplicantUi,
+    isActioning: Boolean,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar inicial
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(ChambaPeBlue.copy(alpha = 0.12f), RoundedCornerShape(50)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = applicant.workerName.firstOrNull()?.uppercase() ?: "?",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ChambaPeBlue
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = applicant.workerName,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = TextPrimary,
+            modifier = Modifier.weight(1f)
+        )
+        if (isActioning) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = ChambaPeBlue)
+        } else {
+            // Botón Aceptar
+            Button(
+                onClick = onAccept,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                modifier = Modifier.height(32.dp)
+            ) { Text("Aceptar", fontSize = 12.sp, color = Color.White) }
+            Spacer(Modifier.width(6.dp))
+            // Botón Rechazar
+            OutlinedButton(
+                onClick = onReject,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD93025)),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                modifier = Modifier.height(32.dp)
+            ) { Text("Rechazar", fontSize = 12.sp) }
         }
     }
 }
