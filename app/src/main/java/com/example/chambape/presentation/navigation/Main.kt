@@ -127,8 +127,9 @@ fun MainScreen() {
                     onGoToSkills        = { navController.navigate(Routes.SkillsFromProfile.route) },
                     onGoToNotifications = { navController.navigate(Routes.Notifications.route) },
                     onLogout            = {
+                        AppModule.tokenManager.clearAll()
                         navController.navigate(Routes.Start.route) {
-                            popUpTo(Routes.Main.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )
@@ -149,8 +150,9 @@ fun MainScreen() {
                 SettingsScreen(
                     onBack   = { navController.popBackStack() },
                     onLogout = {
+                        AppModule.tokenManager.clearAll()
                         navController.navigate(Routes.Start.route) {
-                            popUpTo(Routes.Main.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )
