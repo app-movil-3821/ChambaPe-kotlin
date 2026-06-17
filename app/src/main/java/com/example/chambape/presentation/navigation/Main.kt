@@ -35,7 +35,7 @@ import com.example.chambape.presentation.shifts.MyShiftsScreen
 import com.example.chambape.presentation.shifts.ShiftSummaryScreen
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onLogout: () -> Unit = {}) {
     val navController = rememberNavController()
 
     val mainViewModel: MainViewModel = viewModel(
@@ -131,9 +131,7 @@ fun MainScreen() {
                     onGoToNotifications = { navController.navigate(Routes.Notifications.route) },
                     onLogout            = {
                         AppModule.tokenManager.clearAll()
-                        navController.navigate(Routes.Start.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        onLogout()
                     }
                 )
             }
@@ -154,9 +152,7 @@ fun MainScreen() {
                     onBack   = { navController.popBackStack() },
                     onLogout = {
                         AppModule.tokenManager.clearAll()
-                        navController.navigate(Routes.Start.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        onLogout()
                     }
                 )
             }

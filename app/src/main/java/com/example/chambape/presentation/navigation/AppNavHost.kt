@@ -37,7 +37,7 @@ fun AppNavHost() {
             LoginScreen(
                 onLoginSuccess  = {
                     navController.navigate(Routes.Main.route) {
-                        popUpTo(Routes.Start.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onGoToRegister = { navController.navigate(Routes.Register.route) }
@@ -67,14 +67,20 @@ fun AppNavHost() {
             SkillsScreen(
                 onContinue = {
                     navController.navigate(Routes.Main.route) {
-                        popUpTo(Routes.Start.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(Routes.Main.route) {
-            MainScreen()
+            MainScreen(
+                onLogout = {
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
