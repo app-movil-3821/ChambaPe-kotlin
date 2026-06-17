@@ -57,6 +57,7 @@ private val DarkCard       = Color(0xFF1A2340)
 @Composable
 fun MyShiftsScreen(
     onShiftClick:         (jobId: String) -> Unit,
+    onShiftCompleted:     (jobId: String) -> Unit = {},
     onBack:               (() -> Unit)? = null,
     onNotificationsClick: (() -> Unit)? = null
 ) {
@@ -140,7 +141,7 @@ fun MyShiftsScreen(
 
                 else -> {
                     val completedTotal = uiState.shifts
-                        .filter { it.shift.status == "COMPLETED" }
+                        .filter { it.job?.status == "COMPLETED" }
                         .sumOf { it.job?.paymentAmount ?: 0.0 }
 
                     item {
@@ -161,9 +162,10 @@ fun MyShiftsScreen(
 
                     items(uiState.shifts) { shiftWithJob ->
                         ShiftCard(
-                            shiftWithJob = shiftWithJob,
-                            onClick      = { onShiftClick(shiftWithJob.shift.jobId) },
-                            modifier     = Modifier.padding(horizontal = 16.dp)
+                            shiftWithJob     = shiftWithJob,
+                            onClick          = { onShiftClick(shiftWithJob.shift.jobId) },
+                            onClickCompleted = { onShiftCompleted(shiftWithJob.shift.jobId) },
+                            modifier         = Modifier.padding(horizontal = 16.dp)
                         )
                         Spacer(Modifier.height(12.dp))
                     }
@@ -273,15 +275,27 @@ private fun StatsRow(totalShifts: Int, modifier: Modifier = Modifier) {
 private fun ShiftCard(
     shiftWithJob: ShiftWithJob,
     onClick: () -> Unit,
+    onClickCompleted: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val shift = shiftWithJob.shift
     val job   = shiftWithJob.job
 
-    val (statusLabel, statusColor, statusBg) = shiftStatusStyle(shift.status)
+    // El estado visible para el chambeador se deriva del job, no de la postulación.
+    // La postulación solo tiene PENDING/ACCEPTED/REJECTED/CANCELLED; el progreso
+    // real del trabajo vive en el job (IN_PROGRESS, COMPLETED, etc).
+    val displayStatus = when {
+        job?.status == "IN_PROGRESS" -> "IN_PROGRESS"
+        job?.status == "COMPLETED"   -> "COMPLETED"
+        job?.status == "CANCELLED"   -> "CANCELLED"
+        shift.status == "ACCEPTED"   -> "ACCEPTED"
+        shift.status == "REJECTED"   -> "REJECTED"
+        else                         -> shift.status  // PENDING u otros
+    }
+    val (statusLabel, statusColor, statusBg) = shiftStatusStyle(displayStatus)
 
     Card(
-        onClick   = onClick,
+        onClick   = if (displayStatus == "COMPLETED") onClickCompleted else onClick,
         modifier  = modifier.fillMaxWidth(),
         shape     = RoundedCornerShape(16.dp),
         colors    = CardDefaults.cardColors(containerColor = Color.White),

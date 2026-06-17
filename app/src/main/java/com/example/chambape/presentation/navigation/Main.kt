@@ -73,6 +73,9 @@ fun MainScreen() {
                         onShiftClick         = { shiftId ->
                             navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
                         },
+                        onShiftCompleted     = { jobId ->
+                            navController.navigate(Routes.ShiftSummary.createRoute(jobId))
+                        },
                         onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
                     )
                 }
@@ -168,6 +171,9 @@ fun MainScreen() {
                 MyShiftsScreen(
                     onShiftClick         = { shiftId ->
                         navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
+                    },
+                    onShiftCompleted     = { jobId ->
+                        navController.navigate(Routes.ShiftSummary.createRoute(jobId))
                     },
                     onBack               = { navController.popBackStack() },
                     onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
