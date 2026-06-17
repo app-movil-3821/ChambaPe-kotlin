@@ -18,6 +18,9 @@ interface ShiftService {
     @GET("enrollments/{id}")
     suspend fun getShiftById(@Path("id") enrollmentId: String): ShiftDto
 
+    @GET("enrollments/job/{jobId}")
+    suspend fun getEnrollmentsByJob(@Path("jobId") jobId: String): List<ShiftDto>
+
     @PUT("enrollments/{id}/accept")
     suspend fun acceptShift(@Path("id") enrollmentId: String): ShiftDto
 

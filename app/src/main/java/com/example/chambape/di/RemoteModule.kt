@@ -4,6 +4,7 @@ import com.example.chambape.data.remote.service.AuthService
 import com.example.chambape.data.remote.service.JobService
 import com.example.chambape.data.remote.service.MessageService
 import com.example.chambape.data.remote.service.NotificationService
+import com.example.chambape.data.remote.service.ReviewService
 import com.example.chambape.data.remote.service.ShiftService
 import com.example.chambape.data.repository.TokenManager
 import okhttp3.OkHttpClient
@@ -56,4 +57,7 @@ object RemoteModule {
 
     fun provideNotificationService(retrofit: Retrofit): NotificationService =
         retrofit.create(NotificationService::class.java)
+
+    fun provideReviewService(retrofit: Retrofit): ReviewService =
+        retrofit.create(ReviewService::class.java)
 }

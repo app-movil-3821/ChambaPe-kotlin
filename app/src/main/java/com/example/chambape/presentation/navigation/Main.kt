@@ -35,7 +35,7 @@ import com.example.chambape.presentation.shifts.MyShiftsScreen
 import com.example.chambape.presentation.shifts.ShiftSummaryScreen
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onLogout: () -> Unit = {}) {
     val navController = rememberNavController()
 
     val mainViewModel: MainViewModel = viewModel(
@@ -72,6 +72,9 @@ fun MainScreen() {
                     MyShiftsScreen(
                         onShiftClick         = { shiftId ->
                             navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
+                        },
+                        onShiftCompleted     = { jobId ->
+                            navController.navigate(Routes.ShiftSummary.createRoute(jobId))
                         },
                         onNotificationsClick = { navController.navigate(Routes.Notifications.route) }
                     )
@@ -127,9 +130,8 @@ fun MainScreen() {
                     onGoToSkills        = { navController.navigate(Routes.SkillsFromProfile.route) },
                     onGoToNotifications = { navController.navigate(Routes.Notifications.route) },
                     onLogout            = {
-                        navController.navigate(Routes.Start.route) {
-                            popUpTo(Routes.Main.route) { inclusive = true }
-                        }
+                        AppModule.tokenManager.clearAll()
+                        onLogout()
                     }
                 )
             }
@@ -149,9 +151,8 @@ fun MainScreen() {
                 SettingsScreen(
                     onBack   = { navController.popBackStack() },
                     onLogout = {
-                        navController.navigate(Routes.Start.route) {
-                            popUpTo(Routes.Main.route) { inclusive = true }
-                        }
+                        AppModule.tokenManager.clearAll()
+                        onLogout()
                     }
                 )
             }
@@ -166,6 +167,9 @@ fun MainScreen() {
                 MyShiftsScreen(
                     onShiftClick         = { shiftId ->
                         navController.navigate(Routes.ShiftSummary.createRoute(shiftId))
+                    },
+                    onShiftCompleted     = { jobId ->
+                        navController.navigate(Routes.ShiftSummary.createRoute(jobId))
                     },
                     onBack               = { navController.popBackStack() },
                     onNotificationsClick = { navController.navigate(Routes.Notifications.route) }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.chambape.di.AppModule
 import com.example.chambape.presentation.auth.LoginScreen
 import com.example.chambape.presentation.auth.PhoneVerificationScreen
 import com.example.chambape.presentation.auth.ProfileSetupScreen
@@ -15,9 +16,15 @@ import com.example.chambape.presentation.auth.StartScreen
 fun AppNavHost() {
     val navController = rememberNavController()
 
+    // Si ya hay sesión activa, arranca directo en Main; si no, en Start.
+    val startDestination = if (AppModule.tokenManager.isLoggedIn())
+        Routes.Main.route
+    else
+        Routes.Start.route
+
     NavHost(
         navController    = navController,
-        startDestination = Routes.Start.route
+        startDestination = startDestination
     ) {
         composable(Routes.Start.route) {
             StartScreen(
@@ -30,7 +37,7 @@ fun AppNavHost() {
             LoginScreen(
                 onLoginSuccess  = {
                     navController.navigate(Routes.Main.route) {
-                        popUpTo(Routes.Start.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onGoToRegister = { navController.navigate(Routes.Register.route) }
@@ -60,14 +67,20 @@ fun AppNavHost() {
             SkillsScreen(
                 onContinue = {
                     navController.navigate(Routes.Main.route) {
-                        popUpTo(Routes.Start.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(Routes.Main.route) {
-            MainScreen()
+            MainScreen(
+                onLogout = {
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
