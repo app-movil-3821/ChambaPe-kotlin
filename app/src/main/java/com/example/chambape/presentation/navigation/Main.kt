@@ -149,8 +149,9 @@ fun MainScreen(onLogout: () -> Unit = {}) {
             // Settings
             composable(Routes.Settings.route) {
                 SettingsScreen(
-                    onBack   = { navController.popBackStack() },
-                    onLogout = {
+                    onBack            = { navController.popBackStack() },
+                    onGoToEditProfile = { navController.navigate(Routes.EditProfile.route) },
+                    onLogout          = {
                         AppModule.tokenManager.clearAll()
                         onLogout()
                     }

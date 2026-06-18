@@ -95,7 +95,7 @@ fun ProfileScreen(
 
             // Avatar + name
             Column(
-                modifier            = Modifier.fillMaxWidth().clickable { onGoToEditProfile() },
+                modifier            = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {

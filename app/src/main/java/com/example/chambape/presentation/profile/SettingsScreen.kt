@@ -66,8 +66,9 @@ private val TextSecondary   = Color(0xFF6B6B6B)
 // ─── Screen ───────────────────────────────────────────────────────────────────
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onBack           : () -> Unit = {},
+    onLogout         : () -> Unit = {},
+    onGoToEditProfile: () -> Unit = {}
 ) {
     val viewModel: SettingsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -112,7 +113,7 @@ fun SettingsScreen(
             // ── Cuenta ───────────────────────────────────────────────────────
             SectionTitle("Cuenta")
             SettingsCard {
-                NavRow(Icons.Outlined.Person, "Editar perfil") {}
+                NavRow(Icons.Outlined.Person, "Editar perfil") { onGoToEditProfile() }
                 ThinDivider()
                 NavRow(Icons.Outlined.Lock, "Cambiar contraseña") {}
             }
@@ -384,5 +385,3 @@ private fun IconBadge(icon: ImageVector, tint: Color = ChambaBlue) {
 private fun SettingsScreenPreview() {
     SettingsScreen()
 }
-
-
