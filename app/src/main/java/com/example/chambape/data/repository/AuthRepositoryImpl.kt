@@ -1,6 +1,7 @@
 package com.example.chambape.data.repository
 
 import com.example.chambape.data.mapper.toDomain
+import com.example.chambape.data.remote.dto.ChangePasswordRequest
 import com.example.chambape.data.remote.dto.LoginRequest
 import com.example.chambape.data.remote.dto.RegisterRequest
 import com.example.chambape.data.remote.dto.UpdateUserRequest
@@ -99,5 +100,16 @@ class AuthRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun changePassword(
+        userId         : String,
+        currentPassword: String,
+        newPassword    : String
+    ): Result<Unit> = try {
+        authService.changePassword(userId, ChangePasswordRequest(currentPassword, newPassword))
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 }

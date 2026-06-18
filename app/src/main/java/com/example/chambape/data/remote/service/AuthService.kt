@@ -1,5 +1,6 @@
 package com.example.chambape.data.remote.service
 
+import com.example.chambape.data.remote.dto.ChangePasswordRequest
 import com.example.chambape.data.remote.dto.LoginRequest
 import com.example.chambape.data.remote.dto.LoginResponse
 import com.example.chambape.data.remote.dto.RegisterRequest
@@ -23,4 +24,7 @@ interface AuthService {
 
     @PUT("users/{id}/profile")
     suspend fun updateUser(@Path("id") userId: String, @Body body: UpdateUserRequest): UserDto
+
+    @PUT("users/{id}/password")
+    suspend fun changePassword(@Path("id") userId: String, @Body body: ChangePasswordRequest)
 }

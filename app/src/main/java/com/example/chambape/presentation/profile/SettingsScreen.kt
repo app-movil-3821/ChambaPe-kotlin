@@ -66,9 +66,10 @@ private val TextSecondary   = Color(0xFF6B6B6B)
 // ─── Screen ───────────────────────────────────────────────────────────────────
 @Composable
 fun SettingsScreen(
-    onBack           : () -> Unit = {},
-    onLogout         : () -> Unit = {},
-    onGoToEditProfile: () -> Unit = {}
+    onBack               : () -> Unit = {},
+    onLogout             : () -> Unit = {},
+    onGoToEditProfile    : () -> Unit = {},
+    onGoToChangePassword : () -> Unit = {}
 ) {
     val viewModel: SettingsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -115,7 +116,7 @@ fun SettingsScreen(
             SettingsCard {
                 NavRow(Icons.Outlined.Person, "Editar perfil") { onGoToEditProfile() }
                 ThinDivider()
-                NavRow(Icons.Outlined.Lock, "Cambiar contraseña") {}
+                NavRow(Icons.Outlined.Lock, "Cambiar contraseña") { onGoToChangePassword() }
             }
 
             Spacer(Modifier.height(20.dp))

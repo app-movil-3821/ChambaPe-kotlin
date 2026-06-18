@@ -27,6 +27,7 @@ import com.example.chambape.presentation.home.MyJobsScreen
 import com.example.chambape.presentation.messages.ChatScreen
 import com.example.chambape.presentation.messages.MessagesScreen
 import com.example.chambape.presentation.notifications.NotificationsScreen
+import com.example.chambape.presentation.profile.ChangePasswordScreen
 import com.example.chambape.presentation.profile.EditProfileScreen
 import com.example.chambape.presentation.profile.ProfileScreen
 import com.example.chambape.presentation.profile.SettingsScreen
@@ -146,12 +147,17 @@ fun MainScreen(onLogout: () -> Unit = {}) {
                 EditProfileScreen(onBack = { navController.popBackStack() })
             }
 
+            composable(Routes.ChangePassword.route) {
+                ChangePasswordScreen(onBack = { navController.popBackStack() })
+            }
+
             // Settings
             composable(Routes.Settings.route) {
                 SettingsScreen(
-                    onBack            = { navController.popBackStack() },
-                    onGoToEditProfile = { navController.navigate(Routes.EditProfile.route) },
-                    onLogout          = {
+                    onBack               = { navController.popBackStack() },
+                    onGoToEditProfile    = { navController.navigate(Routes.EditProfile.route) },
+                    onGoToChangePassword = { navController.navigate(Routes.ChangePassword.route) },
+                    onLogout             = {
                         AppModule.tokenManager.clearAll()
                         onLogout()
                     }

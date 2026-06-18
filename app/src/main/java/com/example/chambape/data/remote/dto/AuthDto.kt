@@ -36,3 +36,8 @@ data class UpdateUserRequest(
     val phone      : String       = "",
     val verified   : Boolean      = false
 )
+
+data class ChangePasswordRequest(
+    val currentPassword: String,
+    val newPassword    : String
+)
