@@ -20,7 +20,7 @@ fun AppNavHost() {
     val startDestination = if (AppModule.tokenManager.isLoggedIn())
         Routes.Main.route
     else
-        Routes.Start.route
+        Routes.Login.route
 
     NavHost(
         navController    = navController,
