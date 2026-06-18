@@ -270,22 +270,6 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            // ── Apple ──────────────────────────────────────────────────────────
-            Button(
-                onClick  = { },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape    = RoundedCornerShape(12.dp),
-                colors   = ButtonDefaults.buttonColors(containerColor = Color.Black)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("⌘", fontSize = 20.sp, color = Color.White)
-                    Spacer(Modifier.size(10.dp))
-                    Text("Apple", fontSize = 15.sp, color = Color.White)
-                }
-            }
-
             Spacer(Modifier.weight(1f))
 
             // ── ¿No tienes cuenta? ─────────────────────────────────────────────

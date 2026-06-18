@@ -1,45 +1,21 @@
 package com.example.chambape.presentation.auth
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -52,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.chambape.di.AppModule
 
 private val ChambaBlue = Color(0xFF1A3FD8)
 private val ErrorRed   = Color(0xFFD93025)
@@ -90,9 +68,15 @@ fun validateConfirmPassword(password: String, confirm: String): String? {
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
-    onGoToLogin: () -> Unit
+    onRegisterSuccess           : () -> Unit,  // Contratante → Main
+    onRegisterSuccessChambeador : () -> Unit = onRegisterSuccess, // Chambeador → Skills
+    onGoToLogin                 : () -> Unit
 ) {
+    val viewModel: RegisterViewModel = viewModel(
+        factory = RegisterViewModelFactory(AppModule.authRepository)
+    )
+    val uiState by viewModel.uiState.collectAsState()
+
     var fullName        by remember { mutableStateOf("") }
     var email           by remember { mutableStateOf("") }
     var phone           by remember { mutableStateOf("") }
@@ -100,21 +84,41 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmVisible  by remember { mutableStateOf(false) }
+    var selectedRole    by remember { mutableStateOf("") } // "CHAMBEADOR" o "CONTRATANTE"
 
-    var fullNameError       by remember { mutableStateOf<String?>(null) }
-    var emailError          by remember { mutableStateOf<String?>(null) }
-    var phoneError          by remember { mutableStateOf<String?>(null) }
-    var passwordError       by remember { mutableStateOf<String?>(null) }
+    var fullNameError        by remember { mutableStateOf<String?>(null) }
+    var emailError           by remember { mutableStateOf<String?>(null) }
+    var phoneError           by remember { mutableStateOf<String?>(null) }
+    var passwordError        by remember { mutableStateOf<String?>(null) }
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
-    var submitted           by remember { mutableStateOf(false) }
+    var roleError            by remember { mutableStateOf(false) }
+    var submitted            by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+    val isLoading    = uiState is RegisterUiState.Loading
 
     val isFormValid = validateFullName(fullName) == null &&
             validateEmail(email) == null &&
             validatePhone(phone) == null &&
             validatePassword(password) == null &&
-            validateConfirmPassword(password, confirmPassword) == null
+            validateConfirmPassword(password, confirmPassword) == null &&
+            selectedRole.isNotBlank()
+
+    LaunchedEffect(uiState) {
+        when (val state = uiState) {
+            is RegisterUiState.Success -> {
+                // Contratante → directo a Main (no necesita skills)
+                // Chambeador → pasa por Skills para completar perfil
+                if (state.role == "CONTRATANTE") {
+                    onRegisterSuccess()
+                } else {
+                    onRegisterSuccessChambeador()
+                }
+                viewModel.resetState()
+            }
+            else -> Unit
+        }
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
         Column(
@@ -126,48 +130,84 @@ fun RegisterScreen(
         ) {
             Spacer(Modifier.height(48.dp))
 
-            Text(text = "ChambaYa", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = ChambaBlue)
-            Spacer(Modifier.height(12.dp))
-            Text(text = "Regístrate para empezar a trabajar hoy mismo.", fontSize = 15.sp, color = Color(0xFF6B6B6B), textAlign = TextAlign.Center)
+            Text("ChambaYa", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = ChambaBlue)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text      = "Regístrate para empezar a trabajar hoy mismo.",
+                fontSize  = 15.sp,
+                color     = Color(0xFF6B6B6B),
+                textAlign = TextAlign.Center
+            )
 
             Spacer(Modifier.height(28.dp))
 
-            // ── Google + Apple ─────────────────────────────────────────────────
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = { }, modifier = Modifier.weight(1f).height(50.dp), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFDDDDDD))) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("G", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
-                        Spacer(Modifier.size(8.dp))
-                        Text("Google", fontSize = 14.sp, color = Color(0xFF0D0D0D))
-                    }
-                }
-                OutlinedButton(onClick = { }, modifier = Modifier.weight(1f).height(50.dp), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFDDDDDD))) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("⌘", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D0D0D))
-                        Spacer(Modifier.size(8.dp))
-                        Text("Apple", fontSize = 14.sp, color = Color(0xFF0D0D0D))
-                    }
-                }
+            // ── Error del servidor ─────────────────────────────────────────────
+            if (uiState is RegisterUiState.Error) {
+                Text(
+                    text     = (uiState as RegisterUiState.Error).message,
+                    color    = ErrorRed,
+                    fontSize = 13.sp,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                )
+            }
+
+            // ── Selector de rol ───────────────────────────────────────────────
+            Text(
+                text      = "¿Cómo quieres usar ChambaYa?",
+                fontSize  = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color     = Color(0xFF0D0D0D),
+                modifier  = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text     = "Elige tu rol para personalizar tu experiencia.",
+                fontSize = 13.sp,
+                color    = Color(0xFF6B6B6B),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RoleCard(
+                    emoji       = "🛠️",
+                    title       = "Chambeador",
+                    description = "Busco trabajo temporal",
+                    selected    = selectedRole == "CHAMBEADOR",
+                    modifier    = Modifier.weight(1f),
+                    onClick     = { selectedRole = "CHAMBEADOR"; roleError = false }
+                )
+                RoleCard(
+                    emoji       = "🏢",
+                    title       = "Contratante",
+                    description = "Necesito contratar personal",
+                    selected    = selectedRole == "CONTRATANTE",
+                    modifier    = Modifier.weight(1f),
+                    onClick     = { selectedRole = "CONTRATANTE"; roleError = false }
+                )
+            }
+
+            if (roleError) {
+                Text(
+                    text     = "Selecciona un rol para continuar",
+                    color    = ErrorRed,
+                    fontSize = 12.sp,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                )
             }
 
             Spacer(Modifier.height(24.dp))
-
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE0E0E0))
-                Text("  o regístrate con  ", fontSize = 13.sp, color = Color(0xFF9E9E9E))
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE0E0E0))
-            }
-
+            HorizontalDivider(color = Color(0xFFE0E0E0))
             Spacer(Modifier.height(24.dp))
 
-            // ── Nombre ─────────────────────────────────────────────────────────
+            // ── Nombre ────────────────────────────────────────────────────────
             RegisterField(
                 label         = "Nombre completo",
                 value         = fullName,
-                onValueChange = {
-                    fullName = it
-                    if (submitted) fullNameError = validateFullName(it)
-                },
+                onValueChange = { fullName = it; if (submitted) fullNameError = validateFullName(it) },
                 placeholder   = "Ej. Juan Pérez",
                 leadingIcon   = { Icon(Icons.Outlined.Person, null, tint = Color(0xFFAAAAAA)) },
                 isError       = fullNameError != null,
@@ -178,14 +218,11 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Email ──────────────────────────────────────────────────────────
+            // ── Email ─────────────────────────────────────────────────────────
             RegisterField(
                 label         = "Correo electrónico",
                 value         = email,
-                onValueChange = {
-                    email = it
-                    if (submitted) emailError = validateEmail(it)
-                },
+                onValueChange = { email = it; if (submitted) emailError = validateEmail(it) },
                 placeholder   = "nombre@ejemplo.com",
                 leadingIcon   = { Icon(Icons.Outlined.Email, null, tint = Color(0xFFAAAAAA)) },
                 isError       = emailError != null,
@@ -197,14 +234,11 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Teléfono ───────────────────────────────────────────────────────
+            // ── Teléfono ──────────────────────────────────────────────────────
             RegisterField(
                 label         = "Teléfono",
                 value         = phone,
-                onValueChange = {
-                    phone = it
-                    if (submitted) phoneError = validatePhone(it)
-                },
+                onValueChange = { phone = it; if (submitted) phoneError = validatePhone(it) },
                 placeholder   = "+51 987 654 321",
                 leadingIcon   = { Icon(Icons.Outlined.Phone, null, tint = Color(0xFFAAAAAA)) },
                 isError       = phoneError != null,
@@ -216,15 +250,12 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Contraseña ─────────────────────────────────────────────────────
-            Text(text = "Contraseña", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D), modifier = Modifier.fillMaxWidth())
+            // ── Contraseña ────────────────────────────────────────────────────
+            Text("Contraseña", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D), modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value         = password,
-                onValueChange = {
-                    password = it
-                    if (submitted) passwordError = validatePassword(it)
-                },
+                onValueChange = { password = it; if (submitted) passwordError = validatePassword(it) },
                 modifier      = Modifier.fillMaxWidth(),
                 placeholder   = { Text("••••••••", color = Color(0xFFAAAAAA)) },
                 leadingIcon   = { Icon(Icons.Outlined.Lock, null, tint = Color(0xFFAAAAAA)) },
@@ -244,20 +275,17 @@ fun RegisterScreen(
                 )
             )
             if (passwordError != null) {
-                Text(text = passwordError!!, color = ErrorRed, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp))
+                Text(passwordError!!, color = ErrorRed, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp))
             }
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Confirmar contraseña ───────────────────────────────────────────
-            Text(text = "Confirmar contraseña", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D), modifier = Modifier.fillMaxWidth())
+            // ── Confirmar contraseña ──────────────────────────────────────────
+            Text("Confirmar contraseña", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D), modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value         = confirmPassword,
-                onValueChange = {
-                    confirmPassword = it
-                    if (submitted) confirmPasswordError = validateConfirmPassword(password, it)
-                },
+                onValueChange = { confirmPassword = it; if (submitted) confirmPasswordError = validateConfirmPassword(password, it) },
                 modifier      = Modifier.fillMaxWidth(),
                 placeholder   = { Text("••••••••", color = Color(0xFFAAAAAA)) },
                 leadingIcon   = { Icon(Icons.Outlined.Lock, null, tint = Color(0xFFAAAAAA)) },
@@ -277,12 +305,12 @@ fun RegisterScreen(
                 )
             )
             if (confirmPasswordError != null) {
-                Text(text = confirmPasswordError!!, color = ErrorRed, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp))
+                Text(confirmPasswordError!!, color = ErrorRed, fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 4.dp))
             }
 
             Spacer(Modifier.height(28.dp))
 
-            // ── Botón Sign Up ──────────────────────────────────────────────────
+            // ── Botón Registrarse ─────────────────────────────────────────────
             Button(
                 onClick = {
                     submitted            = true
@@ -291,18 +319,29 @@ fun RegisterScreen(
                     phoneError           = validatePhone(phone)
                     passwordError        = validatePassword(password)
                     confirmPasswordError = validateConfirmPassword(password, confirmPassword)
-                    if (isFormValid) onRegisterSuccess()
+                    roleError            = selectedRole.isBlank()
+                    if (isFormValid && !isLoading) {
+                        viewModel.register(fullName, email, phone, password, selectedRole)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape    = RoundedCornerShape(14.dp),
-                colors   = ButtonDefaults.buttonColors(containerColor = ChambaBlue)
+                enabled  = !isLoading,
+                colors   = ButtonDefaults.buttonColors(
+                    containerColor         = ChambaBlue,
+                    disabledContainerColor = Color(0xFFBBCCF5)
+                )
             ) {
-                Text(text = "Sign Up", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text("Registrarse", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // ── ¿Ya tienes cuenta? ─────────────────────────────────────────────
+            // ── ¿Ya tienes cuenta? ────────────────────────────────────────────
             Row(
                 modifier              = Modifier.fillMaxWidth().padding(bottom = 28.dp),
                 horizontalArrangement = Arrangement.Center,
@@ -311,12 +350,54 @@ fun RegisterScreen(
                 Text("¿Ya tienes una cuenta?", fontSize = 14.sp, color = Color(0xFF6B6B6B))
                 TextButton(
                     onClick        = { onGoToLogin() },
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 4.dp, end = 0.dp, top = 0.dp, bottom = 0.dp)
+                    contentPadding = PaddingValues(start = 4.dp, end = 0.dp, top = 0.dp, bottom = 0.dp)
                 ) {
-                    Text(text = "Inicia sesión", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ChambaBlue)
+                    Text("Inicia sesión", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ChambaBlue)
                 }
             }
         }
+    }
+}
+
+// ─── Tarjeta de rol seleccionable ─────────────────────────────────────────────
+
+@Composable
+private fun RoleCard(
+    emoji      : String,
+    title      : String,
+    description: String,
+    selected   : Boolean,
+    modifier   : Modifier = Modifier,
+    onClick    : () -> Unit
+) {
+    val borderColor = if (selected) ChambaBlue else Color(0xFFDDDDDD)
+    val bgColor     = if (selected) Color(0xFFEEF2FF) else Color.White
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(bgColor)
+            .border(2.dp, borderColor, RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(emoji, fontSize = 28.sp)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text       = title,
+            fontSize   = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color      = if (selected) ChambaBlue else Color(0xFF0D0D0D),
+            textAlign  = TextAlign.Center
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text      = description,
+            fontSize  = 12.sp,
+            color     = Color(0xFF6B6B6B),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -324,19 +405,19 @@ fun RegisterScreen(
 
 @Composable
 private fun RegisterField(
-    label: String,
-    value: String,
+    label        : String,
+    value        : String,
     onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: @Composable () -> Unit,
-    isError: Boolean,
-    errorMessage: String?,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    imeAction: ImeAction       = ImeAction.Next,
-    onNext: () -> Unit         = {}
+    placeholder  : String,
+    leadingIcon  : @Composable () -> Unit,
+    isError      : Boolean,
+    errorMessage : String?,
+    keyboardType : KeyboardType = KeyboardType.Text,
+    imeAction    : ImeAction    = ImeAction.Next,
+    onNext       : () -> Unit   = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D))
+        Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0D0D0D))
         Spacer(Modifier.height(6.dp))
         OutlinedTextField(
             value           = value,
@@ -350,13 +431,13 @@ private fun RegisterField(
             singleLine      = true,
             shape           = RoundedCornerShape(12.dp),
             colors          = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor   = Color(0xFF1A3FD8),
+                focusedBorderColor   = ChambaBlue,
                 unfocusedBorderColor = Color(0xFFDDDDDD),
-                errorBorderColor     = Color(0xFFD93025)
+                errorBorderColor     = ErrorRed
             )
         )
         if (errorMessage != null) {
-            Text(text = errorMessage, color = Color(0xFFD93025), fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp, top = 4.dp))
+            Text(errorMessage, color = ErrorRed, fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp, top = 4.dp))
         }
     }
 }
