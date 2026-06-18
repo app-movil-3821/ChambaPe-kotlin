@@ -117,7 +117,8 @@ fun EditProfileScreen(
                         EditProfileField(
                             label         = "Nombre completo",
                             value         = uiState.name,
-                            onValueChange = { viewModel.onNameChange(it) },
+                            onValueChange = { },
+                            enabled       = false,
                             leadingIcon   = { Icon(Icons.Outlined.Person, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
                         )
 
