@@ -29,9 +29,15 @@ data class RegisterRequest(
 )
 
 data class UpdateUserRequest(
-    val name: String,
-    val phone: String,
-    val skills: List<String> = emptyList(),
-    val experience: String = "",
-    val district: String = ""
+    val photoUrl   : String?      = null,
+    val skills     : List<String> = emptyList(),
+    val experience : String       = "",
+    val district   : String       = "",
+    val phone      : String       = "",
+    val verified   : Boolean      = false
+)
+
+data class ChangePasswordRequest(
+    val currentPassword: String,
+    val newPassword    : String
 )

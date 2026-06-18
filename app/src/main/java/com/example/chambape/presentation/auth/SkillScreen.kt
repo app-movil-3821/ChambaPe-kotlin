@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -28,10 +29,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,9 +62,18 @@ private val skillList = listOf(
 
 @Composable
 fun SkillsScreen(
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    onBack    : () -> Unit = {}
 ) {
+    val viewModel: SkillsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
     var selectedSkills by remember { mutableStateOf(setOf<Int>()) }
+
+    // Navegar cuando el guardado fue exitoso
+    LaunchedEffect(uiState.saveSuccess) {
+        if (uiState.saveSuccess) onContinue()
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -79,7 +92,7 @@ fun SkillsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector        = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Atrás",
@@ -155,8 +168,13 @@ fun SkillsScreen(
 
             // Botón Continuar
             Button(
-                onClick  = { onContinue() },
-                enabled  = selectedSkills.isNotEmpty(),
+                onClick = {
+                    val names = skillList
+                        .filter { it.id in selectedSkills }
+                        .map { it.name }
+                    viewModel.saveSkills(names)
+                },
+                enabled = selectedSkills.isNotEmpty() && !uiState.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
@@ -167,11 +185,24 @@ fun SkillsScreen(
                     disabledContainerColor = Color(0xFFBBCCF5)
                 )
             ) {
+                if (uiState.isSaving) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        text       = "Continuar",
+                        fontSize   = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = Color.White
+                    )
+                }
+            }
+
+            if (uiState.errorMessage != null) {
+                Spacer(Modifier.height(8.dp))
                 Text(
-                    text       = "Continuar",
-                    fontSize   = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color      = Color.White
+                    text     = uiState.errorMessage!!,
+                    color    = Color(0xFFD93025),
+                    fontSize = 13.sp
                 )
             }
 

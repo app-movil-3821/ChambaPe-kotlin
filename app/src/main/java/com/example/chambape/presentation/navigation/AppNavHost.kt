@@ -80,7 +80,8 @@ fun AppNavHost() {
                     navController.navigate(Routes.Main.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 
