@@ -9,16 +9,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class EditProfileUiState(
-    val isLoading: Boolean = false,
-    val isSaving: Boolean = false,
-    val saveSuccess: Boolean = false,
-    val name: String = "",
-    val email: String = "",
-    val phone: String = "",
-    val skills: List<String> = emptyList(),
-    val experience: String = "",
-    val district: String = "",
-    val errorMessage: String? = null
+    val isLoading   : Boolean       = false,
+    val isSaving    : Boolean       = false,
+    val saveSuccess : Boolean       = false,
+    val name        : String        = "",
+    val email       : String        = "",
+    val phone       : String        = "",
+    val role        : String        = "",
+    val skills      : List<String>  = emptyList(),
+    val experience  : String        = "",
+    val district    : String        = "",
+    val errorMessage: String?       = null
 )
 
 class EditProfileViewModel : ViewModel() {
@@ -42,6 +43,7 @@ class EditProfileViewModel : ViewModel() {
                         name       = user.name,
                         email      = user.email,
                         phone      = user.phone,
+                        role       = user.role,
                         skills     = user.skills,
                         experience = user.experience,
                         district   = user.district

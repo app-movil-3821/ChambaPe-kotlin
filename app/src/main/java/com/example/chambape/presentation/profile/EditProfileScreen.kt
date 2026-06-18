@@ -142,37 +142,39 @@ fun EditProfileScreen(
 
                         Spacer(Modifier.height(16.dp))
 
-                        EditProfileField(
-                            label         = "Distrito",
-                            value         = uiState.district,
-                            onValueChange = { viewModel.onDistrictChange(it) },
-                            leadingIcon   = { Icon(Icons.Outlined.LocationOn, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
-                        )
+                        // Campos exclusivos para Chambeadores
+                        if (uiState.role != "CONTRATANTE") {
+                            EditProfileField(
+                                label         = "Distrito",
+                                value         = uiState.district,
+                                onValueChange = { viewModel.onDistrictChange(it) },
+                                leadingIcon   = { Icon(Icons.Outlined.LocationOn, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
+                            )
 
-                        Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(16.dp))
 
-                        EditProfileField(
-                            label         = "Experiencia",
-                            value         = uiState.experience,
-                            onValueChange = { viewModel.onExperienceChange(it) },
-                            leadingIcon   = { Icon(Icons.Outlined.Work, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
-                        )
+                            EditProfileField(
+                                label         = "Experiencia",
+                                value         = uiState.experience,
+                                onValueChange = { viewModel.onExperienceChange(it) },
+                                leadingIcon   = { Icon(Icons.Outlined.Work, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
+                            )
 
-                        Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(20.dp))
 
-                        // ── Skills ────────────────────────────────────────────
-                        Text(
-                            text       = "Habilidades",
-                            fontSize   = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color      = TextPrimary,
-                            modifier   = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        SkillsSelector(
-                            selected = uiState.skills,
-                            onToggle = { viewModel.onSkillToggle(it) }
-                        )
+                            Text(
+                                text       = "Habilidades",
+                                fontSize   = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color      = TextPrimary,
+                                modifier   = Modifier.fillMaxWidth()
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            SkillsSelector(
+                                selected = uiState.skills,
+                                onToggle = { viewModel.onSkillToggle(it) }
+                            )
+                        }
 
                         if (uiState.errorMessage != null) {
                             Spacer(Modifier.height(16.dp))

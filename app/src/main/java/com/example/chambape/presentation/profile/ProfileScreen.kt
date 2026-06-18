@@ -129,51 +129,53 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Skills
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                Row(
-                    modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment     = Alignment.CenterVertically
-                ) {
-                    Text(text = "Habilidades", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                    IconButton(
-                        onClick  = { onGoToSkills() },
-                        modifier = Modifier.size(32.dp).clip(CircleShape).background(ChambaBlue)
+            // Skills (solo para chambeadores)
+            if (uiState.user?.role != "CONTRATANTE") {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Row(
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Agregar habilidad", tint = Color.White, modifier = Modifier.size(18.dp))
+                        Text(text = "Habilidades", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                        IconButton(
+                            onClick  = { onGoToSkills() },
+                            modifier = Modifier.size(32.dp).clip(CircleShape).background(ChambaBlue)
+                        ) {
+                            Icon(Icons.Outlined.Add, contentDescription = "Agregar habilidad", tint = Color.White, modifier = Modifier.size(18.dp))
+                        }
                     }
-                }
-                Spacer(Modifier.height(12.dp))
-                val skills = uiState.user?.skills ?: emptyList()
-                if (skills.isEmpty()) {
-                    Text(
-                        text     = if (uiState.isLoading) "Cargando..." else "Sin habilidades registradas.",
-                        fontSize = 14.sp,
-                        color    = TextSecondary
-                    )
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        skills.forEachIndexed { index, skill ->
-                            val isFirst = index == 0
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isFirst) ChambaBlue else Color.White)
-                                    .border(1.dp, if (isFirst) Color.Transparent else Color(0xFFDDDDDD), RoundedCornerShape(12.dp))
-                                    .padding(horizontal = 20.dp, vertical = 12.dp)
-                            ) {
-                                Text(
-                                    text       = skill,
-                                    fontSize   = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color      = if (isFirst) Color.White else TextPrimary
-                                )
+                    Spacer(Modifier.height(12.dp))
+                    val skills = uiState.user?.skills ?: emptyList()
+                    if (skills.isEmpty()) {
+                        Text(
+                            text     = if (uiState.isLoading) "Cargando..." else "Sin habilidades registradas.",
+                            fontSize = 14.sp,
+                            color    = TextSecondary
+                        )
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            skills.forEachIndexed { index, skill ->
+                                val isFirst = index == 0
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (isFirst) ChambaBlue else Color.White)
+                                        .border(1.dp, if (isFirst) Color.Transparent else Color(0xFFDDDDDD), RoundedCornerShape(12.dp))
+                                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                                ) {
+                                    Text(
+                                        text       = skill,
+                                        fontSize   = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color      = if (isFirst) Color.White else TextPrimary
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
+            } // fin if skills (solo chambeadores)
 
             Spacer(Modifier.height(24.dp))
 
