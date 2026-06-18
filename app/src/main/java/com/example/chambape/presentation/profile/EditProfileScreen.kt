@@ -2,8 +2,12 @@ package com.example.chambape.presentation.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,8 +25,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -134,6 +140,40 @@ fun EditProfileScreen(
                             leadingIcon   = { Icon(Icons.Outlined.Phone, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
                         )
 
+                        Spacer(Modifier.height(16.dp))
+
+                        EditProfileField(
+                            label         = "Distrito",
+                            value         = uiState.district,
+                            onValueChange = { viewModel.onDistrictChange(it) },
+                            leadingIcon   = { Icon(Icons.Outlined.LocationOn, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        EditProfileField(
+                            label         = "Experiencia",
+                            value         = uiState.experience,
+                            onValueChange = { viewModel.onExperienceChange(it) },
+                            leadingIcon   = { Icon(Icons.Outlined.Work, null, tint = Color(0xFFAAAAAA), modifier = Modifier.size(20.dp)) }
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // ── Skills ────────────────────────────────────────────
+                        Text(
+                            text       = "Habilidades",
+                            fontSize   = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color      = TextPrimary,
+                            modifier   = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        SkillsSelector(
+                            selected = uiState.skills,
+                            onToggle = { viewModel.onSkillToggle(it) }
+                        )
+
                         if (uiState.errorMessage != null) {
                             Spacer(Modifier.height(16.dp))
                             Text(
@@ -165,6 +205,42 @@ fun EditProfileScreen(
                         Text("Guardar cambios", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                     }
                 }
+            }
+        }
+    }
+}
+
+private val editableSkills = listOf(
+    "Mesero", "Cajero", "Cocina", "Reparto", "Almacén", "Limpieza"
+)
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SkillsSelector(
+    selected: List<String>,
+    onToggle: (String) -> Unit
+) {
+    FlowRow(
+        modifier              = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement   = Arrangement.spacedBy(8.dp)
+    ) {
+        editableSkills.forEach { skill ->
+            val isSelected = skill in selected
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(if (isSelected) ChambaBlue else Color.White)
+                    .border(1.dp, if (isSelected) ChambaBlue else Color(0xFFDDDDDD), RoundedCornerShape(50))
+                    .clickable { onToggle(skill) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text       = skill,
+                    fontSize   = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color      = if (isSelected) Color.White else TextPrimary
+                )
             }
         }
     }

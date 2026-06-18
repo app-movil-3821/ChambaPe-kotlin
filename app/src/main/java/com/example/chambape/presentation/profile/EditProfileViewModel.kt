@@ -55,8 +55,16 @@ class EditProfileViewModel : ViewModel() {
         }
     }
 
-    fun onNameChange(value: String)  { _uiState.value = _uiState.value.copy(name = value, errorMessage = null) }
-    fun onPhoneChange(value: String) { _uiState.value = _uiState.value.copy(phone = value, errorMessage = null) }
+    fun onNameChange(value: String)       { _uiState.value = _uiState.value.copy(name = value, errorMessage = null) }
+    fun onPhoneChange(value: String)      { _uiState.value = _uiState.value.copy(phone = value, errorMessage = null) }
+    fun onDistrictChange(value: String)   { _uiState.value = _uiState.value.copy(district = value, errorMessage = null) }
+    fun onExperienceChange(value: String) { _uiState.value = _uiState.value.copy(experience = value, errorMessage = null) }
+
+    fun onSkillToggle(skill: String) {
+        val current = _uiState.value.skills.toMutableList()
+        if (skill in current) current.remove(skill) else current.add(skill)
+        _uiState.value = _uiState.value.copy(skills = current, errorMessage = null)
+    }
 
     fun save() {
         val userId = tokenManager.getUserId() ?: return
