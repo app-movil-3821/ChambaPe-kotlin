@@ -48,17 +48,23 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun updateUser(
-        userId: String,
-        name: String,
-        phone: String,
-        skills: List<String>,
+        userId    : String,
+        name      : String,
+        phone     : String,
+        skills    : List<String>,
         experience: String,
-        district: String
+        district  : String
     ): Result<User> {
         return try {
             val dto = authService.updateUser(
                 userId,
-                UpdateUserRequest(name = name, phone = phone, skills = skills, experience = experience, district = district)
+                UpdateUserRequest(
+                    phone      = phone,
+                    skills     = skills,
+                    experience = experience,
+                    district   = district,
+                    verified   = false
+                )
             )
             Result.success(dto.toDomain())
         } catch (e: Exception) {

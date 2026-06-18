@@ -62,7 +62,8 @@ private val skillList = listOf(
 
 @Composable
 fun SkillsScreen(
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    onBack    : () -> Unit = {}
 ) {
     val viewModel: SkillsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -91,7 +92,7 @@ fun SkillsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = { onBack() }) {
                     Icon(
                         imageVector        = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Atrás",

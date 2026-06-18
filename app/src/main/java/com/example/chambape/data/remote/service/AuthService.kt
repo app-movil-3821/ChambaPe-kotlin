@@ -21,6 +21,6 @@ interface AuthService {
     @GET("users/{id}")
     suspend fun getUser(@Path("id") userId: String): UserDto
 
-    @PUT("users/{id}")
+    @PUT("users/{id}/profile")
     suspend fun updateUser(@Path("id") userId: String, @Body body: UpdateUserRequest): UserDto
 }
