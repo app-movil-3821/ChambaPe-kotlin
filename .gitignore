@@ -14,3 +14,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Sensitive config - DO NOT COMMIT
+app/google-services.json
+*.jks
+*.keystore
