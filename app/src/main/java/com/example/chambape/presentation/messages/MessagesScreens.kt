@@ -38,6 +38,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -169,6 +170,11 @@ fun ChatScreen(
     val listState = rememberLazyListState()
 
     LaunchedEffect(conversationId, jobId) { viewModel.load(conversationId, jobId) }
+
+    // Detiene el polling cuando el usuario sale de la pantalla
+    DisposableEffect(conversationId) {
+        onDispose { viewModel.stopPolling() }
+    }
 
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) listState.animateScrollToItem(uiState.messages.size - 1)
