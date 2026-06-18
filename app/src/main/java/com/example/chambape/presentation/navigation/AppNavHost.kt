@@ -20,7 +20,7 @@ fun AppNavHost() {
     val startDestination = if (AppModule.tokenManager.isLoggedIn())
         Routes.Main.route
     else
-        Routes.Start.route
+        Routes.Login.route
 
     NavHost(
         navController    = navController,
@@ -46,8 +46,19 @@ fun AppNavHost() {
 
         composable(Routes.Register.route) {
             RegisterScreen(
-                onRegisterSuccess = { navController.navigate(Routes.PhoneVerification.route) },
-                onGoToLogin       = { navController.navigate(Routes.Login.route) }
+                // Contratante: token ya guardado por auto-login → directo a Main
+                onRegisterSuccess           = {
+                    navController.navigate(Routes.Main.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                // Chambeador: va a Skills para completar perfil
+                onRegisterSuccessChambeador = {
+                    navController.navigate(Routes.Skills.route) {
+                        popUpTo(Routes.Register.route) { inclusive = true }
+                    }
+                },
+                onGoToLogin = { navController.navigate(Routes.Login.route) }
             )
         }
 
