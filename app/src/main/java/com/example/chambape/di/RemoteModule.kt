@@ -14,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RemoteModule {
 
-    private const val BASE_URL = "https://backend-chambaya-production-b2e5.up.railway.app/api/v1/"
+    private const val BASE_URL = "https://backend-chambaya-production-a24a.up.railway.app/api/v1/"
 
     fun provideOkHttpClient(tokenManager: TokenManager): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
