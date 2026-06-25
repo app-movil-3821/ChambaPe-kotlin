@@ -1,5 +1,6 @@
 package com.example.chambape.presentation.home
 
+import com.example.chambape.di.AppModule
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -173,7 +174,12 @@ fun HomeFeedScreen(
                                 // Cabecera fija (Saludo + Subtítulo de Figma)
                                 Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)) {
                                     Text(
-                                        text       = if (userName.isNotBlank()) "¡Hola, $userName!" else "¡Hola, Diego!",
+                                        text       = if (AppModule.tokenManager.isNewUser()) {
+                                            AppModule.tokenManager.setNewUser(false)
+                                            if (userName.isNotBlank()) "¡Bienvenido, $userName! 🎉" else "¡Bienvenido!"
+                                        } else {
+                                            if (userName.isNotBlank()) "¡Hola, $userName!" else "¡Hola!"
+                                        },
                                         fontSize   = 24.sp,
                                         fontWeight = FontWeight.Bold,
                                         color      = TextPrimary

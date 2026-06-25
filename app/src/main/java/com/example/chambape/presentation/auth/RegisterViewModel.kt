@@ -3,6 +3,7 @@ package com.example.chambape.presentation.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.chambape.di.AppModule
 import com.example.chambape.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +58,7 @@ class RegisterViewModel(
             val loginResult = authRepository.login(email.trim(), password)
 
             _uiState.value = if (loginResult.isSuccess) {
+                AppModule.tokenManager.setNewUser(true)
                 RegisterUiState.Success(role)
             } else {
                 // Registro OK pero login falló — pedir que inicie sesión manualmente

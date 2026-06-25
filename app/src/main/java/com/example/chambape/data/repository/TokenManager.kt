@@ -24,6 +24,12 @@ class TokenManager(context: Context) {
 
     fun getUserId(): String? = prefs.getString(KEY_USER_ID, null)
 
+    fun setNewUser(isNew: Boolean) {
+        prefs.edit().putBoolean(KEY_IS_NEW_USER, isNew).apply()
+    }
+
+    fun isNewUser(): Boolean = prefs.getBoolean(KEY_IS_NEW_USER, false)
+
     fun clearAll() {
         prefs.edit().clear().apply()
     }
@@ -31,7 +37,8 @@ class TokenManager(context: Context) {
     fun isLoggedIn(): Boolean = getToken() != null
 
     companion object {
-        private const val KEY_TOKEN   = "jwt_token"
-        private const val KEY_USER_ID = "user_id"
+        private const val KEY_TOKEN       = "jwt_token"
+        private const val KEY_USER_ID     = "user_id"
+        private const val KEY_IS_NEW_USER = "is_new_user"
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -181,7 +182,7 @@ fun ChatScreen(
     }
 
     Surface(modifier = Modifier.fillMaxSize(), color = BackgroundGray) {
-        Column(modifier = Modifier.fillMaxSize().imePadding()) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier              = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 8.dp, vertical = 10.dp),
                 verticalAlignment     = Alignment.CenterVertically,
@@ -232,7 +233,12 @@ fun ChatScreen(
             }
 
             Row(
-                modifier          = Modifier.fillMaxWidth().background(Color.White).padding(horizontal = 12.dp, vertical = 10.dp),
+                modifier          = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+                    .navigationBarsPadding()
+                    .imePadding(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -253,7 +259,9 @@ fun ChatScreen(
                         unfocusedContainerColor = Color(0xFFF5F5F5),
                         focusedContainerColor   = Color(0xFFF5F5F5),
                         unfocusedBorderColor    = Color.Transparent,
-                        focusedBorderColor      = ChambaBlue
+                        focusedBorderColor      = ChambaBlue,
+                        focusedTextColor        = Color(0xFF0D0D0D),
+                        unfocusedTextColor      = Color(0xFF0D0D0D)
                     )
                 )
                 Spacer(Modifier.width(8.dp))
