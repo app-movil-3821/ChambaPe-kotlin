@@ -41,3 +41,7 @@ data class ChangePasswordRequest(
     val currentPassword: String,
     val newPassword    : String
 )
+
+data class GoogleAuthRequest(
+    val idToken: String
+)

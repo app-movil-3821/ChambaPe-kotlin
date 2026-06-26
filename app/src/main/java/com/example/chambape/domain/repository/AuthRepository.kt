@@ -29,4 +29,6 @@ interface AuthRepository {
         currentPassword: String,
         newPassword    : String
     ): Result<Unit>
+
+    suspend fun googleAuth(idToken: String): Result<Unit>
 }

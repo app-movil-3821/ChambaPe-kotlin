@@ -2,6 +2,7 @@ package com.example.chambape.data.repository
 
 import com.example.chambape.data.mapper.toDomain
 import com.example.chambape.data.remote.dto.ChangePasswordRequest
+import com.example.chambape.data.remote.dto.GoogleAuthRequest
 import com.example.chambape.data.remote.dto.LoginRequest
 import com.example.chambape.data.remote.dto.RegisterRequest
 import com.example.chambape.data.remote.dto.UpdateUserRequest
@@ -108,6 +109,17 @@ class AuthRepositoryImpl(
         newPassword    : String
     ): Result<Unit> = try {
         authService.changePassword(userId, ChangePasswordRequest(currentPassword, newPassword))
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun googleAuth(idToken: String): Result<Unit> = try {
+        val response = authService.googleAuth(GoogleAuthRequest(idToken))
+        val token  = response.token  ?: return Result.failure(Exception("Token no recibido"))
+        val userId = response.userId ?: return Result.failure(Exception("UserId no recibido"))
+        tokenManager.saveToken(token)
+        tokenManager.saveUserId(userId)
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
