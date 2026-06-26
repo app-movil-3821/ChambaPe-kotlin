@@ -1,5 +1,6 @@
 package com.example.chambape.presentation.auth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,14 +69,17 @@ fun validateConfirmPassword(password: String, confirm: String): String? {
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess           : () -> Unit,  // Contratante → Main
-    onRegisterSuccessChambeador : () -> Unit = onRegisterSuccess, // Chambeador → Skills
+    onRegisterSuccess           : () -> Unit,
+    onRegisterSuccessChambeador : () -> Unit = onRegisterSuccess,
     onGoToLogin                 : () -> Unit
 ) {
     val viewModel: RegisterViewModel = viewModel(
         factory = RegisterViewModelFactory(AppModule.authRepository)
     )
-    val uiState by viewModel.uiState.collectAsState()
+    val googleViewModel: GoogleAuthViewModel = viewModel()
+    val uiState       by viewModel.uiState.collectAsState()
+    val googleUiState by googleViewModel.uiState.collectAsState()
+    val context        = androidx.compose.ui.platform.LocalContext.current
 
     var fullName        by remember { mutableStateOf("") }
     var email           by remember { mutableStateOf("") }
@@ -107,8 +111,6 @@ fun RegisterScreen(
     LaunchedEffect(uiState) {
         when (val state = uiState) {
             is RegisterUiState.Success -> {
-                // Contratante → directo a Main (no necesita skills)
-                // Chambeador → pasa por Skills para completar perfil
                 if (state.role == "CONTRATANTE") {
                     onRegisterSuccess()
                 } else {
@@ -117,6 +119,14 @@ fun RegisterScreen(
                 viewModel.resetState()
             }
             else -> Unit
+        }
+    }
+
+    // Google auth exitoso → va directo a Main como usuario nuevo
+    LaunchedEffect(googleUiState.success) {
+        if (googleUiState.success) {
+            onRegisterSuccess()
+            googleViewModel.resetState()
         }
     }
 
@@ -200,8 +210,47 @@ fun RegisterScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+
+            // ── Continuar con Google ───────────────────────────────────────────
+            if (googleUiState.errorMessage != null) {
+                Text(
+                    text     = googleUiState.errorMessage!!,
+                    color    = Color(0xFFD93025),
+                    fontSize = 13.sp,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                )
+            }
+            OutlinedButton(
+                onClick  = { googleViewModel.signInWithGoogle(context) },
+                enabled  = !googleUiState.isLoading,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape    = RoundedCornerShape(12.dp),
+                border   = BorderStroke(1.dp, Color(0xFFE0E0E0))
+            ) {
+                if (googleUiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color(0xFF4285F4))
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("G", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
+                        Spacer(Modifier.size(10.dp))
+                        Text("Registrarse con Google", fontSize = 15.sp, color = Color(0xFF0D0D0D))
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
             HorizontalDivider(color = Color(0xFFE0E0E0))
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
+
+            // ── Formulario manual ──────────────────────────────────────────────
+            Text(
+                text       = "O completa el formulario",
+                fontSize   = 13.sp,
+                color      = Color(0xFF9E9E9E),
+                modifier   = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
 
             // ── Nombre ────────────────────────────────────────────────────────
             RegisterField(

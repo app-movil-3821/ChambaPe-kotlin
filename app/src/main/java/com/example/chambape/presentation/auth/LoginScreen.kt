@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -81,7 +82,10 @@ fun LoginScreen(
     val viewModel: LoginViewModel = viewModel(
         factory = LoginViewModelFactory(AppModule.authRepository)
     )
-    val uiState by viewModel.uiState.collectAsState()
+    val googleViewModel: GoogleAuthViewModel = viewModel()
+    val uiState       by viewModel.uiState.collectAsState()
+    val googleUiState by googleViewModel.uiState.collectAsState()
+    val context        = androidx.compose.ui.platform.LocalContext.current
 
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
@@ -94,11 +98,18 @@ fun LoginScreen(
     val isFormValid  = validateEmail(email) == null && validatePasswordLogin(password) == null
     val isLoading    = uiState is LoginUiState.Loading
 
-    // Navegar cuando login es exitoso
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
             onLoginSuccess()
             viewModel.resetState()
+        }
+    }
+
+    // Navegar cuando Google auth es exitoso
+    LaunchedEffect(googleUiState.success) {
+        if (googleUiState.success) {
+            onLoginSuccess()
+            googleViewModel.resetState()
         }
     }
 
@@ -257,16 +268,29 @@ fun LoginScreen(
             Spacer(Modifier.height(20.dp))
 
             // ── Google ─────────────────────────────────────────────────────────
+            if (googleUiState.errorMessage != null) {
+                Text(
+                    text     = googleUiState.errorMessage!!,
+                    color    = Color(0xFFD93025),
+                    fontSize = 13.sp,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                )
+            }
             OutlinedButton(
-                onClick  = { },
+                onClick  = { googleViewModel.signInWithGoogle(context) },
+                enabled  = !googleUiState.isLoading && !isLoading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape    = RoundedCornerShape(12.dp),
                 border   = BorderStroke(1.dp, Color(0xFFE0E0E0))
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("G", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
-                    Spacer(Modifier.size(10.dp))
-                    Text("Google", fontSize = 15.sp, color = Color(0xFF0D0D0D))
+                if (googleUiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color(0xFF4285F4))
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("G", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
+                        Spacer(Modifier.size(10.dp))
+                        Text("Continuar con Google", fontSize = 15.sp, color = Color(0xFF0D0D0D))
+                    }
                 }
             }
 
