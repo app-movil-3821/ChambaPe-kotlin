@@ -320,7 +320,7 @@ fun RegisterScreen(
                 singleLine           = true,
                 shape                = RoundedCornerShape(12.dp),
                 colors               = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ChambaBlue, unfocusedBorderColor = Color(0xFFDDDDDD), errorBorderColor = ErrorRed
+                    focusedBorderColor = ChambaBlue, unfocusedBorderColor = Color(0xFFDDDDDD), errorBorderColor = ErrorRed, focusedTextColor = Color(0xFF0D0D0D), unfocusedTextColor = Color(0xFF0D0D0D)
                 )
             )
             if (passwordError != null) {
@@ -350,7 +350,7 @@ fun RegisterScreen(
                 singleLine           = true,
                 shape                = RoundedCornerShape(12.dp),
                 colors               = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ChambaBlue, unfocusedBorderColor = Color(0xFFDDDDDD), errorBorderColor = ErrorRed
+                    focusedBorderColor = ChambaBlue, unfocusedBorderColor = Color(0xFFDDDDDD), errorBorderColor = ErrorRed, focusedTextColor = Color(0xFF0D0D0D), unfocusedTextColor = Color(0xFF0D0D0D)
                 )
             )
             if (confirmPasswordError != null) {
@@ -482,7 +482,9 @@ private fun RegisterField(
             colors          = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor   = ChambaBlue,
                 unfocusedBorderColor = Color(0xFFDDDDDD),
-                errorBorderColor     = ErrorRed
+                errorBorderColor     = ErrorRed,
+                focusedTextColor     = Color(0xFF0D0D0D),
+                unfocusedTextColor   = Color(0xFF0D0D0D)
             )
         )
         if (errorMessage != null) {
