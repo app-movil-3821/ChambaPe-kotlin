@@ -35,6 +35,10 @@ jobs:
       - name: Create local.properties
         run: echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > local.properties
 
+      # 5.5 Obtener SHA-1 real del keystore de GitHub Actions
+      - name: Print SHA-1
+        run: ./gradlew signingReport --no-daemon 2>/dev/null | grep -A5 "Variant: debug" | grep "SHA1"
+
       # 6. Compilar APK de debug
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
