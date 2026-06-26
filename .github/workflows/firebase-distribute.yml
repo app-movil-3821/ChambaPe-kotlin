@@ -37,7 +37,9 @@ jobs:
 
       # 5.5 Obtener SHA-1 real del keystore de GitHub Actions
       - name: Print SHA-1
-        run: ./gradlew signingReport --no-daemon 2>/dev/null | grep -A5 "Variant: debug" | grep "SHA1"
+        run: |
+          ./gradlew signingReport --no-daemon > /tmp/signing.txt 2>&1 || true
+          grep "SHA1" /tmp/signing.txt | head -3
 
       # 6. Compilar APK de debug
       - name: Build Debug APK
